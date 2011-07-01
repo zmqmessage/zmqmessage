@@ -39,9 +39,10 @@
 /**
  * @def ZMQMESSAGE_LOG_STREAM_NONE
  * Use this constant to disable logging completely.
- * \code
+ * @code
  * #define ZMQMESSAGE_LOG_STREAM ZMQMESSAGE_LOG_STREAM_NONE
- * \endcode
+ * @endcode
+ * jkl
  */
 #define ZMQMESSAGE_LOG_STREAM_NONE if(1); else std::cerr
 
@@ -53,11 +54,13 @@
  * otherwise ZmqMessage is silent.
  * If you want to disable logging even for debug builds,
  * use \ref ZMQMESSAGE_LOG_STREAM_NONE
- * \code
+ * @code
  * #define ZMQMESSAGE_LOG_STREAM ZMQMESSAGE_LOG_STREAM_NONE
- * \endcode
+ * @endcode
  */
 #ifndef ZMQMESSAGE_LOG_STREAM
+//just to generate correct docs
+#define ZMQMESSAGE_LOG_STREAM aa
 #include <iostream>
 # ifdef NDEBUG
 #  define ZMQMESSAGE_LOG_STREAM ZMQMESSAGE_LOG_STREAM_NONE

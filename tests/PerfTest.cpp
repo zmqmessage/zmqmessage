@@ -2,6 +2,12 @@
  * @file PerfTest.cpp
  * @author askryabin
  *
+ * \test
+ * \brief
+ * Measuring performance of receiving/transmitting multipart ZMQ message using ZmqMessage library
+ * compared to plain ZMQ C++ API.
+ *
+ * We make 100000 request-response transactions between 2 threads and print results.
  */
 
 #include "pthread.h"
@@ -9,6 +15,9 @@
 #include <cassert>
 #include <cstring>
 #include <iostream>
+
+/**
+ */
 
 #define ZMQMESSAGE_LOG_STREAM ZMQMESSAGE_LOG_STREAM_NONE
 
