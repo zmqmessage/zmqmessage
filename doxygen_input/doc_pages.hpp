@@ -1,10 +1,10 @@
 /** \mainpage ZmqMessage C++ Library
-Sending and receiving <a href="http://www.zeromq.org">ZeroMQ</a> multipart messages.
+Sending and receiving <a href="http://www.zeromq.org">ZeroMQ</a> \ref zm_multipart "multipart" messages.
 
 <h3>Main features:</h3>
 <ul>
 <li>Transparent interoperability between "simple" and "X" ZMQ endpoint types
-due to routing policies.</li>
+due to routing policies</li>
 <li>Checking for multipart message consistency when receiving
 (if number of parts to be received is known in advance)
 <li>Configurable to use application-specific logging and exception policies</li>
@@ -16,6 +16,7 @@ due to routing policies.</li>
 <div class="zm_toc">
 <h3>Table of contents</h3>
 <ul>
+  <li>\ref zm_multipart "What multipart messages are and why we need them"</li>
   <li>\ref zm_tutorial "Tutorial"</li>
   <li>Reference</li>
     <dd>
@@ -33,6 +34,24 @@ due to routing policies.</li>
 </ul>
 </div>
  */
+
+/** \page zm_multipart
+<h2>What multipart messages are and why we need them</h2>
+
+ZMQ documentation says on multipart messages the following:
+
+\htmlonly
+<div class="zm_boxed">
+<p>A &Oslash;MQ message is composed of 1 or more message parts; each message part is an independent <em>zmq_msg_t</em> in its own right. &Oslash;MQ ensures atomic delivery of messages; peers shall receive either all <em>message parts</em> of a message or none at all.</p>
+<p>The total number of message parts is unlimited.</p>
+<p>An application wishing to send a multi-part message does so by specifying the <em>ZMQ_SNDMORE</em> flag to <em>zmq_send()</em>. The presence of this flag indicates to &Oslash;MQ that the message being sent is a multi-part message and that more message parts are to follow. When the application wishes to send the final message part it does so by calling <em>zmq_send()</em> without the <em>ZMQ_SNDMORE</em> flag; this indicates that no more message parts are to follow.</p>
+</div>
+\endhtmlonly
+
+Thus multipart messages may be used to implement custom text/binary protocols of arbitrary complexity based on ZeroMQ.
+
+The goal of ZmqMessage library is to make working with multipart messages as convenient as possible.
+*/
 
 /** \page zm_build
 <h2>Build instructions</h2>
