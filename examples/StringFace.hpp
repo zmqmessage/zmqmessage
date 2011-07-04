@@ -7,7 +7,11 @@
 #ifndef ZMQMESSAGE_EXAMPLES_STRINGFACE_HPP_
 #define ZMQMESSAGE_EXAMPLES_STRINGFACE_HPP_
 
-//this string-like class just wraps memory, not owns it.
+/**
+ * Example (and also minimal) implementation of string concept required for
+ * \ref ZMQMESSAGE_STRING_CLASS .
+ * This string-like class just wraps memory, not owns it.
+ */
 class StringFace
 {
 public:

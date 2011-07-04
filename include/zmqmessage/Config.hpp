@@ -15,7 +15,7 @@
 /**
  * @def ZMQMESSAGE_STRING_CLASS
  * Class that is default string representation.
- * Must be refinement of a string concept.
+ * Must satisfy the requirements of the string concept.
  * String concept requires a class to be both
  * constructible on const char* and size_t
  * and have data() and length() accessor methods:
@@ -28,7 +28,8 @@
  * };
  * @endcode
  * It's possible (and desirable) for it not to copy and own the memory,
- * but just wrap the external memory region.
+ * but just wrap the external memory region. For example, take a look at
+ * StringFace class from examples.
  * By default, std::string is used.
  */
 #ifndef ZMQMESSAGE_STRING_CLASS
@@ -84,7 +85,9 @@
  * Macro to generate exception class definition by exception name.
  * It enables you to adapt ZmqMessage to you application exception policy
  * (and hierarchy).
- * By default, we generate simple derivative from std::logic_error
+ * By default, we generate simple derivative from std::logic_error.
+ * Note, that final semicolon (';') will be appended at end
+ * where macro is used, so it's not needed in macro definition.
  */
 #ifndef ZMQMESSAGE_EXCEPTION_MACRO
 #include <stdexcept>
@@ -99,7 +102,7 @@
 
 /**
  * @def ZMQMESSAGE_WRAP_ZMQ_ERROR
- * if defined, zmq::error_t will be wreapped
+ * if defined, @c zmq::error_t will be wrapped
  * with exception generated according to \ref ZMQMESSAGE_EXCEPTION_MACRO
  * and named @c ZmqException.
  * Otherwise, it's thrown upwards as is.

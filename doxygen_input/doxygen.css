@@ -2,25 +2,6 @@ BODY,H1,H2,H3,H4,H5,H6,P,CENTER,TD,TH,UL,DL,DIV {
   font-family: Geneva, Arial, Helvetica, sans-serif;
 }
 
-/* CHANGED STYLES
-BODY,TD {
-       font-size: 100%;
-}
-H1 {
-  text-align: center;
-       font-size: 160%;
-}
-H2 {
-       font-size: 120%;
-}
-H3 {
-       font-size: 100%;
-}
-HR { height: 1px;
-     border: none;
-     border-top: 1px solid black;
-}
-*/
 SPAN.keyword       { color: #008000 }
 SPAN.keywordtype   { color: #604020 }
 SPAN.keywordflow   { color: #e08000 }
@@ -31,6 +12,7 @@ SPAN.charliteral   { color: #008080 }
 
 H1 {
   text-align: center;
+  color: #e09060;
 }
 
 HR {
