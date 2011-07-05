@@ -567,23 +567,6 @@ namespace ZmqMessage
   }
 
   template <class RoutingPolicy>
-  template <class OccupationAccumulator>
-  void
-  Outgoing<RoutingPolicy>::relay_from(
-    zmq::socket_t& relay_src, OccupationAccumulator acc)
-    throw (ZmqErrorType)
-  {
-    while (has_more(relay_src))
-    {
-      MsgPtr cur_part(new zmq::message_t);
-      recv_msg(relay_src, *cur_part);
-      size_t sz = cur_part->size();
-      acc(sz);
-      send_owned(cur_part.release());
-    }
-  }
-
-  template <class RoutingPolicy>
   Outgoing<RoutingPolicy>::~Outgoing()
   {
     try
