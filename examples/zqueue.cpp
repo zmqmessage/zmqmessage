@@ -84,7 +84,7 @@ void run_tasks(TaskVec& tasks, zmq::socket_t& s_res, QueueInserter q)
           s_res, ZmqMessage::OutOptions::CACHE_ON_BLOCK |
           ZmqMessage::OutOptions::NONBLOCK));
 
-      egress << "finished" << task.id << ZmqMessage::Flush();
+      egress << "finished" << task.id << ZmqMessage::Flush;
 
       if (egress.is_queued())
       {
@@ -219,7 +219,7 @@ main(int, char**)
     for (int i = 0; i < message_queue_limit+2; ++i)
     {
       ZmqMessage::Outgoing<ZmqMessage::SimpleRouting> to_worker(s_req, ZmqMessage::OutOptions::NONBLOCK);
-      to_worker << "request" << i << ZmqMessage::Flush();
+      to_worker << "request" << i << ZmqMessage::Flush;
       usleep(100000);
     }
 
@@ -232,7 +232,7 @@ main(int, char**)
     for (int i = message_queue_limit+2; i < 2*message_queue_limit+2; ++i)
     {
       ZmqMessage::Outgoing<ZmqMessage::SimpleRouting> to_worker(s_req, ZmqMessage::OutOptions::NONBLOCK);
-      to_worker << "request" << i << ZmqMessage::Flush();
+      to_worker << "request" << i << ZmqMessage::Flush;
       usleep(100000);
     }
     std::cout << "2:requests sent: " << message_queue_limit << std::endl;
@@ -240,7 +240,7 @@ main(int, char**)
     //req queue filled
     ZmqMessage::Outgoing<ZmqMessage::SimpleRouting> to_worker(
       s_req, ZmqMessage::OutOptions::NONBLOCK | ZmqMessage::OutOptions::DROP_ON_BLOCK);
-    to_worker << "request" << (2*message_queue_limit+2) << ZmqMessage::Flush();
+    to_worker << "request" << (2*message_queue_limit+2) << ZmqMessage::Flush;
     assert(to_worker.is_dropping());
 
     //read all
@@ -261,7 +261,7 @@ main(int, char**)
     //stop
 
     ZmqMessage::Outgoing<ZmqMessage::SimpleRouting> to_stop(ss, 0);
-    to_stop << "stop" << ZmqMessage::Flush();
+    to_stop << "stop" << ZmqMessage::Flush;
   }
     catch(const std::exception& ex)
   {

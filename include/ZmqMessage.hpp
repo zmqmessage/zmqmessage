@@ -337,14 +337,26 @@ namespace ZmqMessage
    * When passed to @c Outgoing (operator <<)
    * creates null (empty) message part
    */
-  struct NullMessage {};
+  template<typename RoutingPolicy>
+  Outgoing<RoutingPolicy>&
+  NullMessage(Outgoing<RoutingPolicy>& out)
+  {
+    out.send_owned(new zmq::message_t(0));
+    return out;
+  }
 
   /**
    * @brief Manipulator to flush outgoing message.
    *
    * Manipulator to finally flush (send/enqueue) the outgoing message.
    */
-  struct Flush {};
+  template<typename RoutingPolicy>
+  Outgoing<RoutingPolicy>&
+  Flush(Outgoing<RoutingPolicy>& out)
+  {
+    out.flush();
+    return out;
+  }
 
   /**
    * @brief Manipulator to switch to binary mode
@@ -352,7 +364,13 @@ namespace ZmqMessage
    * Manipulator to turn off conversion to/from text sending/receiving
    * See \ref zm_modes "modes"
    */
-  struct Binary {};
+  template<typename StreamAlike>
+  StreamAlike&
+  Binary(StreamAlike& out)
+  {
+    out.set_binary();
+    return out;
+  }
 
   /**
    * @brief Manipulator to switch to text mode (default)
@@ -360,7 +378,13 @@ namespace ZmqMessage
    * Manipulator to turn on conversion to/from text sending/receiving.
    * See \ref zm_modes "modes"
    */
-  struct Text {};
+  template<typename StreamAlike>
+  StreamAlike&
+  Text(StreamAlike& out)
+  {
+    out.set_text();
+    return out;
+  }
 
   /**
    * @brief Incoming multipart ZMQ message.
@@ -567,15 +591,23 @@ namespace ZmqMessage
     operator>> (zmq::message_t& msg) throw(NoSuchPartError);
 
     /**
+     * Handle a manipulator
+     */
+    Incoming<RoutingPolicy>&
+    operator>> (Incoming<RoutingPolicy>& (*f)(Incoming<RoutingPolicy>&))
+    {
+      return f(*this);
+    }
+
+    /**
      * Set stream mode to Binary:
      * all subsequent non-string data is extracted from ZMQ message as binary data
      * See \ref zm_modes "modes"
      */
-    Incoming<RoutingPolicy>&
-    operator>> (Binary)
+    void
+    set_binary()
     {
       binary_mode_ = true;
-      return *this;
     }
 
     /**
@@ -584,11 +616,10 @@ namespace ZmqMessage
      * (by writing to stream) after being extracted from ZMQ message.
      * See \ref zm_modes "modes"
      */
-    Incoming<RoutingPolicy>&
-    operator>> (Text)
+    void
+    set_text()
     {
       binary_mode_ = false;
-      return *this;
     }
   };
 
@@ -779,8 +810,7 @@ namespace ZmqMessage
       throw(ZmqErrorType);
 
     void
-    send_owned(
-      zmq::message_t* owned) throw(ZmqErrorType);
+    send_owned(zmq::message_t* owned) throw(ZmqErrorType);
 
     void
     do_send_one(
@@ -959,53 +989,24 @@ namespace ZmqMessage
     }
 
     /**
-     * Insert null (empty) message part
-     */
-    inline Outgoing<RoutingPolicy>&
-    operator<< (NullMessage tag)
-    {
-      send_owned(new zmq::message_t(0));
-      return *this;
-    }
-
-    /**
      * Insert raw message (see @c RawMessage)
      */
     Outgoing<RoutingPolicy>&
     operator<< (const RawMessage& m);
 
     /**
-     * Insert Flush manipulator to flush (finally send/enqueue) the message.
+     * Handle a manipulator
      */
     inline Outgoing<RoutingPolicy>&
-    operator<< (Flush)
+    operator<< (Outgoing<RoutingPolicy>& (*f)(Outgoing<RoutingPolicy>&))
     {
-      flush();
-      return *this;
+      return f(*this);
     }
 
-    /**
-     * Switch stream to binary mode. See \ref zm_modes "modes"
-     */
-    inline Outgoing<RoutingPolicy>&
-    operator<< (Binary)
-    {
-      options_ |= OutOptions::BINARY_MODE;
-      return *this;
-    }
-
-    /**
-     * Switch stream to text mode. See \ref zm_modes "modes"
-     */
-    inline Outgoing<RoutingPolicy>&
-    operator<< (Text)
-    {
-      options_ &= ~OutOptions::BINARY_MODE;
-      return *this;
-    }
-
+    friend
+    Outgoing<RoutingPolicy>&
+    NullMessage<RoutingPolicy>(Outgoing<RoutingPolicy>&);
   };
-
 }
 
 #endif /* ZMQMESSAGE_HPP_ */

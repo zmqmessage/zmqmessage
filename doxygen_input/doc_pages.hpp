@@ -187,7 +187,7 @@ Use Text and Binary manipulators to switch stream to/from binary mode. Default m
 //read text command and binary integer as value.
 std::string command;
 int value;
-incoming >> ZmqMessage::Text() >> command << ZmqMessage::Binary() << value;
+incoming >> ZmqMessage::Text >> command << ZmqMessage::Binary << value;
 \endcode
 </li>
 <li>For iteration over incoming:
@@ -211,9 +211,9 @@ ZmqMessage::Outgoing<ZmqMessage::XRouting> outgoing(
 long id = 1;
 
 outgoing << id //insert binary
-  << ZmqMessage::Text() //switch to text
+  << ZmqMessage::Text //switch to text
   << "SET_VALUE"
-  << ZmqMessage::Binary() << 999; //again binary
+  << ZmqMessage::Binary << 999; //again binary
 
 \endcode
 </li>
@@ -395,7 +395,7 @@ outgoing << ZmqMessage::RawMessage(buffer, 128);
 
 //send message with binary number and flush it;
 int num = 9988;
-outgoing << ZmqMessage::Binary() << num << ZmqMessage::Flush();
+outgoing << ZmqMessage::Binary << num << ZmqMessage::Flush;
 \endcode
 
 Flushing Outgoing message sends final (terminal) message part (which was inserted before flushing),
