@@ -79,7 +79,7 @@ multipart_sender(zmq::socket_t& s)
       << StringFace(PART1, ARRAY_LEN(PART1)-1)
       << StringFace(PART2, ARRAY_LEN(PART2)-1)
       << StringFace(PART3, ARRAY_LEN(PART3)-1)
-      << ZmqMessage::Flush;
+      << ZmqMessage::Flush();
 
     ZmqMessage::Incoming<ZmqMessage::SimpleRouting> incoming(s);
 
@@ -145,7 +145,7 @@ multipart_receiver(void* arg)
 
     ZmqMessage::Outgoing<ZmqMessage::SimpleRouting> outgoing(s, 0);
 
-    outgoing << ZmqMessage::NullMessage << ZmqMessage::Flush;
+    outgoing << ZmqMessage::NullMessage() << ZmqMessage::Flush();
   }
   return 0;
 }

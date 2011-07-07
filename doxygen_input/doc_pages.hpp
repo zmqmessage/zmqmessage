@@ -11,6 +11,7 @@ due to routing policies</li>
 <li>Possibility to use user-supplied string-like classes to avoid copying</li>
 <li>Supporting iterators, insert (<<) operator for outgoing messages and extract (>>) operator for incoming messages</li>
 <li>Text (default) and binary \ref zm_modes "modes" for extraction/insertion/iteration of parts</li>
+<li>Possibility for \ref zm_queueing "queueing messages" for delayed sending if either blocking or dropping is unacceptable</li>
 </ul>
 
 <div class="zm_toc">
@@ -24,6 +25,12 @@ due to routing policies</li>
     - Class ZmqMessage::Outgoing for sending outgoing messages
     - \ref ZmqMessage "All ZmqMessage namespace members",
     including functions for convenient working with message parts \n
+    </dd>
+  </li>
+  <li>Advanced aspects</li>
+    <dd>
+    - \ref zm_modes "Text and binary modes"
+    - \ref zm_queueing "Queueing messages for delayed sending"
     </dd>
   </li>
   <li><a class="el" href="examples.html">Examples</a></li>
@@ -52,6 +59,56 @@ Thus multipart messages may be used to implement custom text/binary protocols of
 
 The goal of ZmqMessage library is to make working with multipart messages as convenient as possible.
 */
+
+/** \page zm_queueing
+<h2>Queueing messages for delayed sending</h2>
+
+This feature is useful when:
+<ul>
+<li>sending messages may block
+(ex. <a href="http://api.zeromq.org/2-1-1:zmq-setsockopt">ZMQ_HWM</a> is set and has been reached)
+</li>
+<li>we cannot block on sending message (it would make our thread unresponsive to other events).
+</li>
+<li>we cannot drop the message, cause it MUST be delivered when possible.
+</li>
+</ul>
+
+In this case we should create outgoing messages with ZmqMessage::OutOptions::NONBLOCK and ZmqMessage::OutOptions::CACHE_ON_BLOCK.
+If sending fails, we may 'detach' composed message and resend it later, when output socket will be available for writing.
+
+\code
+//delayed queue
+std::vector<Zmqmessage::Multipart*> queue;
+
+zmq::socket_t s_req(ctx, ZMQ_PUSH);
+
+//set HWM
+uint64_t lim = 10;
+s_req.setsockopt(ZMQ_HWM, &lim, sizeof(uint64_t));
+
+s_req.connect("inproc://test-ep");
+
+ZmqMessage::OutOptions opts(s_req,
+  ZmqMessage::OutOptions::CACHE_ON_BLOCK | ZmqMessage::OutOptions::NONBLOCK);
+
+ZmqMessage::Outgoing<ZmqMessage::SimpleRouting> egress(opts);
+
+egress << "finished" << 888 << ZmqMessage::Flush;
+
+if (egress.is_queued())
+{
+  queue.push_back(egress.detach());
+}
+\endcode
+
+See example \ref zqueue.cpp for details.
+
+Note, that currently queueing functionality has proven working only for PUSH-PULL sockets.
+Request-reply patterns (REQ, RES, XREQ, XRES sockets) in many cases
+prevent congestion due to internal socket states.
+
+ */
 
 /** \page zm_build
 <h2>Build instructions</h2>

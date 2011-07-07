@@ -129,7 +129,7 @@ relay(void*)
         ZmqMessage::Outgoing<ZmqMessage::SimpleRouting> to_int(i, 0);
         to_int.relay_from(relay);
         // request is read
-        to_int << 38 << ZmqMessage::Flush;
+        to_int << 38 << ZmqMessage::Flush();
         // extra stuff added. sent to worker.
 
         ZmqMessage::relay_raw(i, relay, false);
@@ -139,7 +139,7 @@ relay(void*)
       {
         ZmqMessage::Outgoing<ZmqMessage::SimpleRouting> to_string(s, 0);
         to_string.relay_from(relay);
-        to_string << "some addition" << ZmqMessage::Flush;
+        to_string << "some addition" << ZmqMessage::Flush();
 
         ZmqMessage::relay_raw(s, relay, false);
         // answer from worker resent to main thread
@@ -147,10 +147,10 @@ relay(void*)
       else if (mode == stop_mode)
       {
         ZmqMessage::Outgoing<ZmqMessage::SimpleRouting> to_stop_int(i, 0);
-        to_stop_int << stop_mode << ZmqMessage::Flush;
+        to_stop_int << stop_mode << ZmqMessage::Flush();
 
         ZmqMessage::Outgoing<ZmqMessage::SimpleRouting> to_stop_string(s, 0);
-        to_stop_string << stop_mode << ZmqMessage::Flush;
+        to_stop_string << stop_mode << ZmqMessage::Flush();
 
         break;
       }

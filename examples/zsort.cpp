@@ -140,7 +140,7 @@ main(int, char**)
 
 
     ZmqMessage::Outgoing<ZmqMessage::SimpleRouting> to_stop(s, 0);
-    to_stop << "stop" << ZmqMessage::Flush;
+    to_stop << "stop" << ZmqMessage::Flush();
     // send termination marker to worker
   }
   catch(const std::exception& ex)

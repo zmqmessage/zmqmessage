@@ -226,11 +226,15 @@ namespace ZmqMessage
    * Receive message part from socket
    */
   inline void
-  recv_msg(zmq::socket_t& sock, zmq::message_t& msg) throw(ZmqErrorType)
+  recv_msg(zmq::socket_t& sock, zmq::message_t& msg,
+    int flags = 0) throw(ZmqErrorType)
   {
     try
     {
-      sock.recv(&msg);
+      if (!sock.recv(&msg, flags))
+      {
+        throw zmq::error_t();
+      }
     }
     catch (const zmq::error_t& e)
     {
@@ -247,7 +251,10 @@ namespace ZmqMessage
   {
     try
     {
-      sock.send(msg, flags);
+      if (!sock.send(msg, flags))
+      {
+        throw zmq::error_t();
+      }
     }
     catch (const zmq::error_t& e)
     {

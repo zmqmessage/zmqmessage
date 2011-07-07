@@ -59,9 +59,9 @@ void* req(void* arg)
   //request
   outgoing << part1 << SECOND_PART <<
     ZmqMessage::RawMessage(buf, payloadsz, &my_free) <<
-    ZmqMessage::Binary << BIN_PART <<
-    ZmqMessage::Text << NUM_TEXT_PART <<
-    ZmqMessage::Flush;
+    ZmqMessage::Binary() << BIN_PART <<
+    ZmqMessage::Text() << NUM_TEXT_PART <<
+    ZmqMessage::Flush();
 
   std::cout << "req: request sent" << std::endl;
 
@@ -122,8 +122,8 @@ void* res(void* arg)
   std::string part1, part2, part3;
   int part4, part5;
   incoming >> part1 >> part2 >> part3 >>
-    ZmqMessage::Binary >> part4 >>
-    ZmqMessage::Text >> part5;
+    ZmqMessage::Binary() >> part4 >>
+    ZmqMessage::Text() >> part5;
   assert(part2 == SECOND_PART);
   assert(part4 == BIN_PART);
   assert(part5 == NUM_TEXT_PART);
