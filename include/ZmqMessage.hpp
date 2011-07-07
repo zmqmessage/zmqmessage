@@ -927,7 +927,7 @@ namespace ZmqMessage
     {
       options_ |= OutOptions::BINARY_MODE;
     }
-    
+
     void
     set_text()
     {
@@ -1012,4 +1012,3 @@ namespace ZmqMessage
 #endif /* ZMQMESSAGE_HPP_ */
 
 #include "zmqmessage/ZmqMessageImpl.hpp"
-
