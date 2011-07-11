@@ -8,7 +8,7 @@
 #include <sstream>
 
 #include "zmqmessage/Config.hpp"
-#include "zmqmessage/StrTypes.hpp"
+#include "zmqmessage/MetaTypes.hpp"
 #include "zmqmessage/RawMessage.hpp"
 
 namespace ZmqMessage
@@ -20,8 +20,9 @@ namespace ZmqMessage
    * @tparam T class supporting string operations (@see Private::IsStr)
    */
   template <typename T>
-  inline T
-  get(zmq::message_t& message,
+  inline
+  T
+  get(zmq::message_t& message, T&,
     typename Private::EnableIf<Private::IsStr<T>::value>::type* = 0)
   {
     return T(static_cast<char*>(message.data()), message.size());
@@ -36,14 +37,27 @@ namespace ZmqMessage
    * @return the converted content
    */
   template <typename T>
-  inline T
-  get(zmq::message_t& message,
-      typename Private::DisableIf<Private::IsStr<T>::value>::type* = 0)
+  inline
+  T
+  get(zmq::message_t& message, T&, 
+      typename Private::DisableIf<Private::IsStr<T>::value>::type* = 0,
+      typename Private::DisableIf<Private::IsRaw<T>::value>::type* = 0)
   {
     std::stringstream ss;
     ss.write(static_cast<char*>(message.data()), message.size());
     T t;
     ss >> t;
+    return t;
+  }
+
+  template <typename T>
+  inline
+  T&
+  get(zmq::message_t& message, T& t,
+      typename Private::DisableIf<Private::IsStr<T>::value>::type* = 0,
+      typename Private::EnableIf<Private::IsRaw<T>::value>::type* = 0)
+  {
+    get_bin(message, t);
     return t;
   }
 
@@ -54,7 +68,8 @@ namespace ZmqMessage
    * @param t will contain the COPY of message contents
    */
   template <typename T>
-  inline void
+  inline
+  void
   get_bin(zmq::message_t& message, T& t)
   {
     t = *(reinterpret_cast<T*>(message.data()));
@@ -189,12 +204,26 @@ namespace ZmqMessage
   template <class T>
   inline void
   init_msg(const T& t, zmq::message_t& msg,
-    typename Private::DisableIf<Private::IsStr<T>::value>::type* = 0)
+           typename Private::DisableIf<Private::IsStr<T>::value>::type* = 0,
+           typename Private::DisableIf<Private::IsRaw<T>::value>::type* = 0)
   {
     std::ostringstream os;
     os << t;
     const std::string& s = os.str();
     init_msg(s, msg);
+  }
+
+  /*
+   * Initialize zmq message by arbitrary (non-string) type to send
+   * in binary form
+   */
+  template <class T>
+  inline void
+  init_msg(const T& t, zmq::message_t& msg,
+           typename Private::DisableIf<Private::IsStr<T>::value>::type* = 0,
+           typename Private::EnableIf<Private::IsRaw<T>::value>::type* = 0)
+  {
+    init_msg(&t, sizeof(T), msg);
   }
 
   /**

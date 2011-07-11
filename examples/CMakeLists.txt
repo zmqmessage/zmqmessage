@@ -3,32 +3,21 @@ include_directories(
   ${ZEROMQ_INCLUDE_DIR}
   )
 
-add_executable(zsort
-  zsort.cpp
+MACRO(OneFileExample)
+  FOREACH(exname ${ARGN})
+    ADD_EXECUTABLE(${exname}
+      ./${exname}.cpp
+      )
+    TARGET_LINK_LIBRARIES(${exname}
+      pthread
+      zmqmessage)
+  ENDFOREACH(exname)
+ENDMACRO(OneFileExample)
+
+OneFileExample(
+  zsort
+  zbisort
+  zqueue
+  zserialize
   )
-
-target_link_libraries(zsort
-  pthread
-  zmqmessage
-  )
-
-add_executable(zbisort
-  zbisort.cpp
-  )
-
-target_link_libraries(zbisort
-  pthread
-  zmqmessage
-  )
-
-add_executable(zqueue
-  zqueue.cpp
-  )
-
-target_link_libraries(zqueue
-  pthread
-  zmqmessage
-  )
-
-
 

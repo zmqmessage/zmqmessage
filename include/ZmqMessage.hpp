@@ -458,7 +458,7 @@ namespace ZmqMessage
      * @param check_terminal if true, message may contain not more then
      * @c parts number of parts.
      */
-    void
+    Incoming <RoutingPolicy>&
     receive(
       size_t parts, const char* part_names[],
       size_t part_names_length, bool check_terminal)
@@ -468,35 +468,38 @@ namespace ZmqMessage
      * @overload
      */
     template <size_t N>
-    inline void
+    inline
+    Incoming <RoutingPolicy>&
     receive(
       std::tr1::array<const char*, N> part_names, bool check_terminal)
       throw (MessageFormatError)
     {
-      receive(N, part_names.data(), check_terminal);
+      return receive(N, part_names.data(), check_terminal);
     }
 
     /**
      * @overload
      * Part names are omitted
      */
-    inline void
+    inline
+    Incoming <RoutingPolicy>&
     receive(size_t parts, bool check_terminal)
       throw (MessageFormatError, ZmqErrorType)
     {
-      receive(parts, 0, 0, check_terminal);
+      return receive(parts, 0, 0, check_terminal);
     }
 
     /**
      * @overload
      * assume size of part_names == parts
      */
-    inline void
+    inline
+    Incoming <RoutingPolicy>&
     receive(
       size_t parts, const char* part_names[], bool check_terminal)
       throw (MessageFormatError, ZmqErrorType)
     {
-      receive(parts, part_names, parts, check_terminal);
+      return receive(parts, part_names, parts, check_terminal);
     }
 
     /**
@@ -504,7 +507,7 @@ namespace ZmqMessage
      * (min @c min_parts, max unbounded).
      * Multipart message will be considered terminal.
      */
-    void
+    Incoming <RoutingPolicy>&
     receive_all(
       const size_t min_parts,
       const char* part_names[], size_t part_names_length)
@@ -514,33 +517,36 @@ namespace ZmqMessage
      * @overload
      * assume size of part_names == min_parts
      */
-    inline void
+    inline
+    Incoming <RoutingPolicy>&
     receive_all(const size_t min_parts, const char* part_names[])
       throw (MessageFormatError, ZmqErrorType)
     {
-      receive_all(min_parts, part_names, min_parts);
+      return receive_all(min_parts, part_names, min_parts);
     }
 
     /**
      * @overload
      * No minimum parts limit (may be 0)
      */
-    inline void
+    inline
+    Incoming <RoutingPolicy>&
     receive_all()
       throw (MessageFormatError, ZmqErrorType)
     {
-      receive_all(0, 0, 0);
+      return receive_all(0, 0, 0);
     }
 
     /**
      * @overload
      * Part names are unknown.
      */
-    inline void
+    inline
+    Incoming <RoutingPolicy>&
     receive_all(const size_t min_parts)
       throw (MessageFormatError, ZmqErrorType)
     {
-      receive_all(min_parts, 0, 0);
+      return receive_all(min_parts, 0, 0);
     }
 
     /**
@@ -548,7 +554,8 @@ namespace ZmqMessage
      * (but not less than min_parts).
      * Assume that length of part_names == min_parts
      */
-    void
+    inline
+    Incoming <RoutingPolicy>&
     receive_up_to(size_t min_parts, const char* part_names[],
       size_t max_parts) throw (MessageFormatError, ZmqErrorType);
 
@@ -562,7 +569,8 @@ namespace ZmqMessage
      * @param delimiter - null terminated string, inserted between parts
      * @return number of messages in result (min 1)
      */
-    int fetch_tail(std::vector<char>& area, const char* delimiter = 0)
+    int
+    fetch_tail(std::vector<char>& area, const char* delimiter = 0)
       throw (ZmqErrorType);
 
     /**
@@ -571,7 +579,8 @@ namespace ZmqMessage
      * We assume that we have used THIS socket on receive() call.
      * @return number of messages in result (min 1)
      */
-    int drop_tail() throw(ZmqErrorType);
+    int
+    drop_tail() throw(ZmqErrorType);
 
     /**
      * After we have received message parts, we can extract

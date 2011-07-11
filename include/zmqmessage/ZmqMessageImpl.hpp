@@ -35,7 +35,7 @@ namespace ZmqMessage
     }
     else
     {
-      cur_ = get<T>(*(messages_[idx_]));
+      cur_ = get<T>(*(messages_[idx_]), cur_);
     }
   }
 
@@ -51,7 +51,7 @@ namespace ZmqMessage
     }
     else
     {
-      t = get<T>(*(parts_[cur_extract_idx_++]));
+      t = get<T>(*(parts_[cur_extract_idx_++]), t);
     }
     return *this;
   }
@@ -61,16 +61,16 @@ namespace ZmqMessage
   Outgoing<RoutingPolicy>&
   Outgoing<RoutingPolicy>::operator<< (const T& t)
   {
+    MsgPtr msg(new zmq::message_t);
     if (options_ & OutOptions::BINARY_MODE)
     {
-      return operator<<(RawMessage(&t, sizeof(T)));
+      init_msg(&t, sizeof(T), *msg);
     }
     else
     {
-      MsgPtr msg(new zmq::message_t);
       init_msg(t, *msg);
-      send_owned(msg.release());
     }
+    send_owned(msg.release());
     return *this;
   }
 
