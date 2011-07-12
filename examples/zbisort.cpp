@@ -273,7 +273,7 @@ main(int, char**)
 
 
     ZmqMessage::Outgoing<ZmqMessage::SimpleRouting> to_stop(s, 0);
-    to_stop << stop_mode;// << ZmqMessage::Flush();
+    to_stop << stop_mode;// << ZmqMessage::Flush;
     to_stop.flush();
     // send termination marker to worker
   }
