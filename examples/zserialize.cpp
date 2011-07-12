@@ -52,7 +52,7 @@ operator>>(std::basic_istream<charT, traits>& strm,
   return strm;
 }
 
-// to sens in binary form
+// to send in binary form
 //  because of "raw_mark" tag
 struct SomeBinaryData
 {
@@ -75,9 +75,9 @@ receiver(void*)
   {
     zmq::socket_t s(ctx, ZMQ_PULL);
     s.connect(endpoint);
-    // socket to receive data from main thread 
+    // socket to receive data from main thread
     //   is connected
-    
+
     typedef ZmqMessage::Incoming<ZmqMessage::SimpleRouting> ZIn;
 
     std::string text;
@@ -102,7 +102,7 @@ receiver(void*)
     std::cout << text << ' ' << data << ", numeric " << num << std::endl;
 
     SomeBinaryData binary_data;
-      
+
     ZIn(s).receive(3, to_worker_fields, 3, true) >> text >>
       binary_data >> ZmqMessage::Text >> num;
     std::cout << text << ' ' << binary_data.f1 << ':' << binary_data.f2 <<
@@ -124,7 +124,7 @@ receiver(void*)
       ", numeric " << num << std::endl;
 
     double double_num;
-      
+
     ZIn(s).receive(3, to_worker_fields, 3, true) >> text >>
       binary_data >> double_num;
     std::cout << text << ' ' << binary_data.f1 << ':' << binary_data.f2 <<
@@ -157,15 +157,15 @@ main(int, char**)
     SomeData data;
     data.f1 = 123;
     strcpy(data.f2, "a string");
-    
+
     typedef ZmqMessage::Outgoing<ZmqMessage::SimpleRouting> ZOut;
 
     ZOut(s, 0) << "Sent in default mode" << data << 100 <<
       ZmqMessage::Flush;
-    
+
     ZOut(s, 0) << "Sent in binary mode" << ZmqMessage::Binary << data << 100 <<
       ZmqMessage::Flush;;
-    
+
     ZOut(s, 0) << "Structure in binary mode, numeric as text" <<
       ZmqMessage::Binary << data << ZmqMessage::Text << 100 <<
       ZmqMessage::Flush;
@@ -179,10 +179,10 @@ main(int, char**)
 
     ZOut(s, 0) << "Sent in default mode" << binary_data << 100 <<
       ZmqMessage::Flush;
-    
+
     ZOut(s, 0) << "Sent in binary mode" << ZmqMessage::Binary << data <<
       100 << ZmqMessage::Flush;
-    
+
     ZOut(s, 0) << "Structure in binary mode, numeric as text" <<
       ZmqMessage::Binary << data << ZmqMessage::Text << 100 <<
       ZmqMessage::Flush;
@@ -191,7 +191,7 @@ main(int, char**)
       data << ZmqMessage::Binary << 100 << ZmqMessage::Flush;
 
     ZOut(s, 0) << "Structure in default (binary) mode, "
-      "numeric as binary too" << 
+      "numeric as binary too" <<
       data << (double)100.1 << ZmqMessage::Flush;
   }
   catch(const std::exception& ex)

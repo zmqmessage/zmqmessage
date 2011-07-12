@@ -12,8 +12,8 @@ namespace ZmqMessage
   /**
    * @namespace ZmqMessage::Private
    * @brief For internal usage
-   *   to determine propare way to pass a particalar
-   *   datatype.
+   *   to determine proper way to pass a particular
+   *   data type.
    */
   namespace Private
   {
@@ -66,6 +66,12 @@ namespace ZmqMessage
   }
 }
 
+/**
+ * @def ZMQMESSAGE_BINARY_TYPE
+ * Declares particular type as 'binary'. It will always be sent and received
+ * in binary mode, independent of current stream state.
+ * See \ref zm_modes modes docs for details.
+ */
 #define ZMQMESSAGE_BINARY_TYPE(type_name) \
 namespace ZmqMessage \
 { \
@@ -79,6 +85,12 @@ namespace ZmqMessage \
   } \
 }
 
+/**
+ * @def ZMQMESSAGE_TEXT_TYPE
+ * Declares particular type as 'text'. It will always be sent and received
+ * in text mode, independent of current stream state.
+ * See \ref zm_modes modes docs for details.
+ */
 #define ZMQMESSAGE_TEXT_TYPE(type_name) \
 namespace ZmqMessage \
 { \
