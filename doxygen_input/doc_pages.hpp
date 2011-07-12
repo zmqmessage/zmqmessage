@@ -102,7 +102,7 @@ if (egress.is_queued())
 }
 \endcode
 
-See example \ref zqueue.cpp for details.
+See example \ref zasync.cpp "zasync" for details.
 
 Note, that currently queueing functionality has proven working only for PUSH-PULL sockets.
 Request-reply patterns (REQ, RES, XREQ, XRES sockets) in many cases

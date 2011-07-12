@@ -1,7 +1,8 @@
 /**
- * @file zqueue.hpp
- * Demonstrating ZmqMessage queueing functionality for delayed sending of messages.
- * Currently queueing has proven working only for PUSH-PULL sockets.
+ * @file zasync.hpp
+ * Demonstrating ZmqMessage queueing functionality for delayed sending of messages
+ * to implement asynchronous worker thread.
+ * (Note that currently queueing has proven working only for PUSH-PULL sockets.)
  */
 #include "pthread.h"
 #include "stdint.h"
@@ -10,7 +11,7 @@
 #include "ZmqMessage.hpp"
 
 /**
-\example zqueue.cpp
+\example zasync.cpp
 
 This example emulates processing of asynchronous tasks in a separate thread.
 Tasks and their results are received and sent via ZMQ.
