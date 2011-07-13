@@ -217,6 +217,39 @@ outgoing << id //insert binary
 
 \endcode
 </li>
+<li>For all:
+When you need a particular type to be ALWAYS sent/received/iterated in either binary or text form
+(independent on current stream state), you may use any of two ways for it.
+
+1. Declare your 'binary' types with @c raw_mark field.
+\code
+struct SomeBinaryData
+{
+  typedef void raw_mark;
+
+  int f1;
+  char f2[20];
+};
+\endcode
+
+2. Declare particular types as 'binary' using \ref ZMQMESSAGE_BINARY_TYPE
+or as text using \ref ZMQMESSAGE_TEXT_TYPE macros.
+\code
+
+struct OtherBinaryData
+{
+  int aa;
+  char[100] data;
+};
+ZMQMESSAGE_BINARY_TYPE(OtherBinaryData);
+
+//always send/receive 'long' as text.
+ZMQMESSAGE_TEXT_TYPE(long);
+\endcode
+Actually, these macros create a specialization
+of traits type ZmqMessage::Private::IsRaw for the type specified.
+
+See example zserialize.cpp for details.
 </ul>
  */
 

@@ -63,7 +63,8 @@ struct SomeBinaryData
 };
 
 // to send in binary form
-ZMQMESSAGE_BINARY_TYPE(double);
+ZMQMESSAGE_BINARY_TYPE(double)
+;
 
 const char* to_worker_fields[] = {"text", "structure", "numeric"};
 
