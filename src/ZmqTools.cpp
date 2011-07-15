@@ -1,68 +1,8 @@
+/**
+ * @file ZmqTools.cpp
+ * @author askryabin
+ */
 
 #include "ZmqTools.hpp"
 
-namespace
-{
-  void
-  my_free(void *data, void *hint)
-  {
-    ::free(data);
-  }
-}
-
-namespace ZmqMessage
-{
-  time_t
-  get_time(zmq::message_t& message)
-  {
-    errno = 0;
-    time_t tm = strtol(get_string(message).data(), 0, 10);
-    if (errno)
-    {
-      return time_t();
-    }
-    return tm;
-  }
-
-  void
-  init_msg(const void* t, size_t sz, zmq::message_t& msg)
-  {
-    void *data = ::malloc(sz);
-    assert(data);
-    ::memcpy(data, t, sz);
-    try
-    {
-      msg.rebuild(data, sz, &my_free, 0);
-    }
-    catch (const zmq::error_t& e)
-    {
-      throw_zmq_exception(e);
-    }
-  }
-
-  bool
-  has_more(zmq::socket_t& sock)
-  {
-    int64_t more = 0;
-    size_t more_size = sizeof(more);
-    sock.getsockopt(ZMQ_RCVMORE, &more, &more_size);
-    return (more != 0);
-  }
-
-  int
-  relay_raw(zmq::socket_t& src, zmq::socket_t& dst, bool check_first_part)
-  {
-    int relayed = 0;
-    for (
-      bool more = check_first_part ? has_more(src) : true;
-      more; ++relayed)
-    {
-      zmq::message_t cur_part;
-      src.recv(&cur_part);
-      more = has_more(src);
-      int flag = more ? ZMQ_SNDMORE : 0;
-      send_msg(dst, cur_part, flag);
-    }
-    return relayed;
-  }
-}
+#include "zmqmessage/ZmqToolsFullImpl.hpp"

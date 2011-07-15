@@ -3,8 +3,6 @@ project(ZMQMESSAGE)
 # projects library name
 set(TARGET_NAME zmqmessage)
 
-find_package(ZeroMQ)
-
 set(ZMQMESSAGE_SOURCE_FILES
   ZmqMessage.cpp
   ZmqTools.cpp

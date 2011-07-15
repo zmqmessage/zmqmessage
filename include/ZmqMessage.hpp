@@ -10,9 +10,8 @@
 #include <string>
 #include <memory>
 
-#include <zmq.hpp>
+#include <ZmqMessageFwd.hpp>
 
-#include <zmqmessage/Config.hpp>
 #include <zmqmessage/DelObj.hpp>
 #include <zmqmessage/NonCopyable.hpp>
 #include <zmqmessage/MsgPtrVec.hpp>
@@ -29,22 +28,6 @@
  */
 namespace ZmqMessage
 {
-  /**
-   * @class MessageFormatError
-   * @brief
-   * Thrown when received multipart message consists of wrong number of parts.
-   */
-  ZMQMESSAGE_EXCEPTION_MACRO(MessageFormatError)
-  ;
-
-  /**
-   * @class NoSuchPartError
-   * @brief
-   * Thrown when trying to access inexistent part in received message
-   */
-  ZMQMESSAGE_EXCEPTION_MACRO(NoSuchPartError)
-  ;
-
   // routing policies
 
   /**
@@ -94,28 +77,13 @@ namespace ZmqMessage
       return &routing_;
     }
 
-    inline
+    ZMQMESSAGE_HEADERONLY_INLINE
     void
-    log_routing_received() const
-    {
-      ZMQMESSAGE_LOG_STREAM << "Receiving multipart, route received: "
-        << routing_.size() << " parts";
-    }
+    log_routing_received() const;
 
+    ZMQMESSAGE_HEADERONLY_INLINE
     ~XRouting();
   };
-
-  class Multipart;
-
-  template <class RoutingPolicy>
-  class Outgoing;
-
-  /**
-   * Send given message to destination socket
-   */
-  void
-  send(zmq::socket_t& sock, Multipart& multipart, bool nonblock)
-    throw(ZmqErrorType);
 
   /**
    * @brief Basic holder of message parts.
@@ -125,10 +93,12 @@ namespace ZmqMessage
   protected:
     MsgPtrVec parts_;
 
+    ZMQMESSAGE_HEADERONLY_INLINE
     void
     check_has_part(size_t n) const throw(NoSuchPartError);
 
   private:
+    ZMQMESSAGE_HEADERONLY_INLINE
     void
     clear();
 
@@ -319,6 +289,7 @@ namespace ZmqMessage
     /**
      * Get reference to zmq::message_t by index
      */
+    ZMQMESSAGE_HEADERONLY_INLINE
     zmq::message_t&
     operator[](size_t i) throw (NoSuchPartError);
 
@@ -326,6 +297,7 @@ namespace ZmqMessage
      * Release (disown) message at specified index.
      * @return 0 if such message is not owned by Multipart
      */
+    ZMQMESSAGE_HEADERONLY_INLINE
     zmq::message_t*
     release(size_t i);
 
@@ -677,7 +649,7 @@ namespace ZmqMessage
   };
 
   /**
-   * @brief Outgoing message.
+   * @brief Represents outgoing message to be sent.
    *
    * All message parts are either sent (if possible)
    * OR become exclusively owned by this object,
@@ -1019,4 +991,8 @@ namespace ZmqMessage
 
 #endif /* ZMQMESSAGE_HPP_ */
 
-#include "zmqmessage/ZmqMessageImpl.hpp"
+#include "zmqmessage/ZmqMessageTemplateImpl.hpp"
+
+#ifdef ZMQMESSAGE_HEADERONLY
+# include "zmqmessage/ZmqMessageFullImpl.hpp"
+#endif

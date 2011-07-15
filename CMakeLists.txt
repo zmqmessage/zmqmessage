@@ -40,11 +40,7 @@ set(
   INTERNAL ""
   )
 
-# set(CPACK_GENERATOR "RPM")
-# SET(CPACK_SOURCE_GENERATOR "TGZ")
-# include(CPack)
-
-
+find_package(ZeroMQ)
 
 add_subdirectory(src)
 add_subdirectory(include)

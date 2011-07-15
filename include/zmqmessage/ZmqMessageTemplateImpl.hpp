@@ -1,14 +1,15 @@
 /**
- * @file ZmqMessageImpl.hpp
+ * @file ZmqMessageTemplateImpl.hpp
  * @author askryabin
- *
+ * Definition of template functions.
+ * They are to be instantiated in client code.
  */
 
 #include <functional>
 #include <algorithm>
 
-#ifndef ZMQMESSAGE_ZMQMESSAGEIMPL_HPP_
-#define ZMQMESSAGE_ZMQMESSAGEIMPL_HPP_
+#ifndef ZMQMESSAGE_ZMQMESSAGETEMPLATEIMPL_HPP_
+#define ZMQMESSAGE_ZMQMESSAGETEMPLATEIMPL_HPP_
 
 /////////////////////////////////////////////////
 //       definition of templates
@@ -92,4 +93,4 @@ namespace ZmqMessage
   }
 }
 
-#endif /* ZMQMESSAGE_ZMQMESSAGEIMPL_HPP_ */
+#endif /* ZMQMESSAGE_ZMQMESSAGETEMPLATEIMPL_HPP_ */
