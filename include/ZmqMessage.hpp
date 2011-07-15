@@ -554,7 +554,6 @@ namespace ZmqMessage
      * (but not less than min_parts).
      * Assume that length of part_names == min_parts
      */
-    inline
     Incoming <RoutingPolicy>&
     receive_up_to(size_t min_parts, const char* part_names[],
       size_t max_parts) throw (MessageFormatError, ZmqErrorType);
