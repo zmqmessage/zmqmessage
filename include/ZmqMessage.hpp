@@ -333,7 +333,7 @@ namespace ZmqMessage
   };
 
   /**
-   * @brief Null (empty) message marker
+   * @brief Null (empty) message marker to send
    *
    * When passed to @c Outgoing (operator <<)
    * creates null (empty) message part
@@ -344,6 +344,22 @@ namespace ZmqMessage
   {
     out.send_owned(new zmq::message_t(0));
     return out;
+  }
+
+  /**
+   * @brief Skip current message part in incoming message
+   *
+   * When passed to @c Incoming (operator >>)
+   * just skips current message and moves receive pointer to next one.
+   * Also, usual checking that current part exists is performed.
+   */
+  template<typename RoutingPolicy>
+  Incoming<RoutingPolicy>&
+  Skip(Incoming<RoutingPolicy>& in)
+  {
+    in.check_has_part(in.cur_extract_idx_);
+    ++in.cur_extract_idx_;
+    return in;
   }
 
   /**
@@ -424,6 +440,10 @@ namespace ZmqMessage
     {
       return RoutingPolicy::get_routing();
     }
+
+    friend
+    Incoming<RoutingPolicy>&
+    Skip<RoutingPolicy>(Incoming<RoutingPolicy>&);
 
   public:
     typedef RoutingPolicy RoutingPolicyType;

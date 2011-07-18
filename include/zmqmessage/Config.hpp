@@ -19,6 +19,7 @@
  * or linking against shared library (which gives less flexibility
  * in configuration, but reduces compile time, size of generated executable
  * and may appear to be more efficient).
+ * Default build is not header-only.
  * By defining this constant you perform header-only build and do not need
  * to link against shared library:
  * \code

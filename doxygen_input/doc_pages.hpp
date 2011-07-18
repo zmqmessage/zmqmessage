@@ -294,14 +294,15 @@ ZMQMESSAGE_HEADERONLY
 \endcode
 @copydoc ZMQMESSAGE_HEADERONLY
 
-If you prefer to link, the following problem arises:
+If you prefer to link and need extensive configuration, the following problem may arise:
 library is built separately, with definite and basically default configuration
 (\ref ZMQMESSAGE_LOG_STREAM, \ref ZMQMESSAGE_EXCEPTION_MACRO),
 So if you need to override them in your application,
 you really need to <b>rebuild shared library</b> with appropriate definitions
 (the same as you define in your application).
-For non header-only builds you may define only \ref ZMQMESSAGE_STRING_CLASS.
-Or just use library as header-only.
+For non header-only builds you may freely define only \ref ZMQMESSAGE_STRING_CLASS
+(cause it is used only in template instantiations).
+Or just use library as header-only and configure whatever you want.
 </li>
 
 <li>
@@ -416,7 +417,9 @@ else
 
   if (incoming.size() > 1)
   {
-    zmq::message_t& first = incoming[1];
+    std::string first;
+    incoming >> ZmqMessage::Skip //command is already analyzed
+      >> first; // same as first = ZmqMessage::get<std::string>(incoming[1]);
     //...
   }
 }
@@ -446,7 +449,7 @@ MyString id("112233");
 
 outgoing << id << "SET_VARIABLES";
 
-//Number will be converted to string (written to stream), cause Outgoing is in Text \ref zm_modes "mode".
+//Number will be converted to string (written to stream), cause Outgoing is in Text mode.
 outgoing << 567099;
 
 char buffer[128];
