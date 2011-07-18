@@ -264,13 +264,22 @@ namespace ZmqMessage
   {
     if (is_terminal_)
     {
-      return 1;
+      return 0;
     }
 
-    int num_messages = 1;
+    zmq::message_t data_buff;
+    int num_messages = 0;
+    if (parts_.empty()) //we haven't received anything
+    {
+      if (!try_recv_msg(src_, data_buff, ZMQ_NOBLOCK))
+      {
+        return 0;
+      }
+      num_messages = 1;
+    }
+
     for (; has_more(src_); ++num_messages)
     {
-      zmq::message_t data_buff;
       recv_msg(src_, data_buff);
     }
     return num_messages;

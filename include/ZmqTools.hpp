@@ -274,6 +274,24 @@ namespace ZmqMessage
   }
 
   /**
+   * Try to receive message part from socket.
+   * @return false if would block
+   */
+  inline bool
+  try_recv_msg(zmq::socket_t& sock, zmq::message_t& msg,
+    int flags = ZMQ_NOBLOCK) throw(ZmqErrorType)
+  {
+    try
+    {
+      return sock.recv(&msg, flags);
+    }
+    catch (const zmq::error_t& e)
+    {
+      throw_zmq_exception(e);
+    }
+  }
+
+  /**
    * Send message part to socket with specified flags
    */
   inline void
