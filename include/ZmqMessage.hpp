@@ -66,6 +66,7 @@ namespace ZmqMessage
     MsgPtrVec routing_; //!< including null message
 
   protected:
+    ZMQMESSAGE_HEADERONLY_INLINE
     void
     receive_routing(zmq::socket_t& sock)
       throw (MessageFormatError, ZmqErrorType);
@@ -234,7 +235,8 @@ namespace ZmqMessage
     /**
      * Obtain iterator that yields values of default string type.
      */
-    inline iterator<ZMQMESSAGE_STRING_CLASS>
+    inline
+    iterator<ZMQMESSAGE_STRING_CLASS>
     beginstr() const
     {
       return begin<ZMQMESSAGE_STRING_CLASS>();
@@ -780,6 +782,7 @@ namespace ZmqMessage
 
     State state_;
 
+    ZMQMESSAGE_HEADERONLY_INLINE
     void
     send_routing(
       MsgPtrVec* routing) throw(ZmqErrorType);
