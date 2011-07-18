@@ -9,9 +9,11 @@
 #include <tr1/array>
 #include <string>
 #include <memory>
+#include <zmq.hpp>
 
 #include <ZmqMessageFwd.hpp>
 
+#include <zmqmessage/Config.hpp>
 #include <zmqmessage/DelObj.hpp>
 #include <zmqmessage/NonCopyable.hpp>
 #include <zmqmessage/MsgPtrVec.hpp>
@@ -28,6 +30,31 @@
  */
 namespace ZmqMessage
 {
+  /**
+   * @class MessageFormatError
+   * @brief
+   * Thrown when received multipart message consists of wrong number of parts.
+   */
+  ZMQMESSAGE_EXCEPTION_MACRO(MessageFormatError)
+  ;
+
+  /**
+   * @class NoSuchPartError
+   * @brief
+   * Thrown when trying to access inexistent part in received message
+   */
+  ZMQMESSAGE_EXCEPTION_MACRO(NoSuchPartError)
+  ;
+
+  /**
+   * Send given message to destination socket
+   */
+  ZMQMESSAGE_HEADERONLY_INLINE
+  void
+  send(zmq::socket_t& sock, Multipart& multipart, bool nonblock)
+    throw(ZmqErrorType);
+
+
   // routing policies
 
   /**

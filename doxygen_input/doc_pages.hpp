@@ -281,7 +281,8 @@ See example zserialize.cpp for details.
 <h3>Configuring library</h3>
 To integrate the library into your application you can (and encouraged to)
 define a few macro constants before including library headers
-(ZmqMessageFwd.hpp, ZmqMessage.hpp and ZmqTools.hpp) anywhere in your application.
+(ZmqMessage.hpp and ZmqTools.hpp) anywhere in your application.
+ZmqMessageFwd.hpp may be included wherever (i.e. before the definitions).
 Though none of these definitions are mandatory.
 
 These constants are:
