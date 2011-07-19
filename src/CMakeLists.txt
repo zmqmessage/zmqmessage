@@ -5,7 +5,6 @@ set(TARGET_NAME zmqmessage)
 
 set(ZMQMESSAGE_SOURCE_FILES
   ZmqMessage.cpp
-  ZmqTools.cpp
   )
 
 # projects include directory
@@ -13,6 +12,12 @@ include_directories(
   ${ZMQMESSAGE_INCLUDE_DIR}
   ${ZEROMQ_INCLUDE_DIR}
   )
+
+if (${ZMQMESSAGE_CONFIGURATION_HEADER})
+  set_target_properties(${TARGET_NAME}
+    PROPERTIES COMPILE_DEFINITIONS "ZMQMESSAGE_CONFIGURATION_HEADER=${ZMQMESSAGE_CONFIGURATION_HEADER}"
+  )
+endif()
 
 # link projects object files
 # into an executable named

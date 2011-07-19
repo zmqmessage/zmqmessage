@@ -17,7 +17,13 @@
 #include <cassert>
 #include <cstring>
 
+#include <string>
+
 #include "ZmqMessage.hpp"
+
+#ifdef HEADERONLY
+# include "ZmqMessageImpl.hpp"
+#endif
 
 #define ARRAY_LEN(arr) sizeof(arr)/sizeof((arr)[0])
 

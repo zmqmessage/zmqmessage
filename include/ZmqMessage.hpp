@@ -49,7 +49,6 @@ namespace ZmqMessage
   /**
    * Send given message to destination socket
    */
-  ZMQMESSAGE_HEADERONLY_INLINE
   void
   send(zmq::socket_t& sock, Multipart& multipart, bool nonblock)
     throw(ZmqErrorType);
@@ -93,7 +92,6 @@ namespace ZmqMessage
     MsgPtrVec routing_; //!< including null message
 
   protected:
-    ZMQMESSAGE_HEADERONLY_INLINE
     void
     receive_routing(zmq::socket_t& sock)
       throw (MessageFormatError, ZmqErrorType);
@@ -105,11 +103,9 @@ namespace ZmqMessage
       return &routing_;
     }
 
-    ZMQMESSAGE_HEADERONLY_INLINE
     void
     log_routing_received() const;
 
-    ZMQMESSAGE_HEADERONLY_INLINE
     ~XRouting();
   };
 
@@ -121,12 +117,10 @@ namespace ZmqMessage
   protected:
     MsgPtrVec parts_;
 
-    ZMQMESSAGE_HEADERONLY_INLINE
     void
     check_has_part(size_t n) const throw(NoSuchPartError);
 
   private:
-    ZMQMESSAGE_HEADERONLY_INLINE
     void
     clear();
 
@@ -318,7 +312,6 @@ namespace ZmqMessage
     /**
      * Get reference to zmq::message_t by index
      */
-    ZMQMESSAGE_HEADERONLY_INLINE
     zmq::message_t&
     operator[](size_t i) throw (NoSuchPartError);
 
@@ -326,7 +319,6 @@ namespace ZmqMessage
      * Release (disown) message at specified index.
      * @return 0 if such message is not owned by Multipart
      */
-    ZMQMESSAGE_HEADERONLY_INLINE
     zmq::message_t*
     release(size_t i);
 
@@ -828,7 +820,6 @@ namespace ZmqMessage
 
     State state_;
 
-    ZMQMESSAGE_HEADERONLY_INLINE
     void
     send_routing(
       MsgPtrVec* routing) throw(ZmqErrorType);
@@ -1041,7 +1032,3 @@ namespace ZmqMessage
 #endif /* ZMQMESSAGE_HPP_ */
 
 #include "zmqmessage/ZmqMessageTemplateImpl.hpp"
-
-#ifdef ZMQMESSAGE_HEADERONLY
-# include "zmqmessage/ZmqMessageFullImpl.hpp"
-#endif

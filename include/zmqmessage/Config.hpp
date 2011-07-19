@@ -13,29 +13,6 @@
 //to adapt ZmqMessage library to your application.
 
 /**
- * @def ZMQMESSAGE_HEADERONLY
- * First of all, you need to choose build type: header-only
- * (which gives more flexibility in settings)
- * or linking against shared library (which gives less flexibility
- * in configuration, but reduces compile time, size of generated executable
- * and may appear to be more efficient).
- * Default build is not header-only.
- * By defining this constant you perform header-only build and do not need
- * to link against shared library:
- * \code
- * #define ZMQMESSAGE_HEADERONLY
- * \endcode
- */
-#ifndef ZMQMESSAGE_HEADERONLY
-//just to generate correct docs
-# define ZMQMESSAGE_HEADERONLY 1
-# undef ZMQMESSAGE_HEADERONLY
-# define ZMQMESSAGE_HEADERONLY_INLINE
-#else
-# define ZMQMESSAGE_HEADERONLY_INLINE inline
-#endif
-
-/**
  * @def ZMQMESSAGE_STRING_CLASS
  * Class that is default string representation.
  * Must satisfy the requirements of the string concept.
@@ -54,9 +31,9 @@
  * but just wrap the external memory region. For example, take a look at
  * StringFace class from examples.
  * By default, std::string is used.
- * You may define this setting both if you are linking against prebuilt
- * shared library or using library as header-only
- * (see \ref ZMQMESSAGE_HEADERONLY)
+ * You may define this setting both if you are linking against
+ * shared library or using library as built-in
+ * (see \ref ref_linking_options "linking options")
  */
 #ifndef ZMQMESSAGE_STRING_CLASS
 #include <string>
@@ -85,10 +62,9 @@
  * #define ZMQMESSAGE_LOG_STREAM ZMQMESSAGE_LOG_STREAM_NONE
  * @endcode
  * Note, that this constant is overridable either for
- * \ref ZMQMESSAGE_HEADERONLY "headeronly" builds
- * or during compiling shared library.
+ * application builds without shared library or during compiling shared library.
  * Defining this setting in your application headers during
- * non header-only build takes no effect.
+ * building with shared library takes no effect.
  */
 #ifndef ZMQMESSAGE_LOG_STREAM
 #include <iostream>
@@ -107,10 +83,9 @@
  * #define ZMQMESSAGE_LOG_TERM ""
  * @endcode
  * Note, that this constant is overridable either for
- * \ref ZMQMESSAGE_HEADERONLY "headeronly" builds
- * or during compiling shared library.
+ * application builds without shared library or during compiling shared library.
  * Defining this setting in your application headers during
- * non header-only build takes no effect.
+ * building with shared library takes no effect.
  */
 #ifndef ZMQMESSAGE_LOG_TERM
 #define ZMQMESSAGE_LOG_TERM std::endl
@@ -125,24 +100,34 @@
  * Note, that final semicolon (';') will be appended at end
  * where macro is used, so it's not needed in macro definition.
  * Note, that this constant is overridable either for
- * \ref ZMQMESSAGE_HEADERONLY "headeronly" builds
- * or during compiling shared library.
- * For non header-only builds:
- * This setting MUST be the same as used while building shared library.
- * So, if you rebuild library with specific (non-default) exception
- * macro definition, you MUST provide the SAME definitions before including
- * the library headers in your application.
- * Otherwise, the unexpected exception would be thrown, it may lead to crash.
+ * application builds without shared library or during compiling shared library.
  */
 #ifndef ZMQMESSAGE_EXCEPTION_MACRO
 #include <stdexcept>
+namespace ZmqMessage
+{
+  template <class Tag>
+  class DefaultExceptionTemplate : public std::logic_error
+  {
+  public:
+    explicit DefaultExceptionTemplate (const std::string& arg) :
+      std::logic_error(arg) {}
+  };
+}
 #define ZMQMESSAGE_EXCEPTION_MACRO(name) \
-  class name : public std::logic_error \
-  { \
-  public: \
-    explicit name (const std::string& arg) : \
-      std::logic_error(arg) {} \
-  }
+  class name##_tag {}; \
+  typedef ::ZmqMessage::DefaultExceptionTemplate<name##_tag> name
+#else
+namespace ZmqMessage
+{
+  //make this type unusable
+  template <class Tag>
+  class DefaultExceptionTemplate
+  {
+  private:
+    DefaultExceptionTemplate() {}
+  };
+}
 #endif
 
 /**

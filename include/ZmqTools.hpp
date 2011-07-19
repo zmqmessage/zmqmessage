@@ -141,7 +141,6 @@ namespace ZmqMessage
   /**
    * Get timestamp from TEXT message, converting ASCII string to unsigned long
    */
-  ZMQMESSAGE_HEADERONLY_INLINE
   time_t
   get_time(zmq::message_t& message);
 
@@ -183,7 +182,6 @@ namespace ZmqMessage
    * (created duplicate of buffer will be owned by zmq message
    * and will be destroyed by it)
    */
-  ZMQMESSAGE_HEADERONLY_INLINE
   void
   init_msg(const void* t, size_t sz, zmq::message_t& msg);
 
@@ -333,7 +331,6 @@ namespace ZmqMessage
   /**
    * Does specified socket has more messages to receive
    */
-  ZMQMESSAGE_HEADERONLY_INLINE
   bool
   has_more(zmq::socket_t& sock);
 
@@ -346,7 +343,6 @@ namespace ZmqMessage
    * even for 1st part
    * @return number of relayed parts
    */
-  ZMQMESSAGE_HEADERONLY_INLINE
   int
   relay_raw(zmq::socket_t& src, zmq::socket_t& dst,
     bool check_first_part = true);
@@ -355,7 +351,3 @@ namespace ZmqMessage
 
 #endif //ZMQMESSAGE_ZMQ_TOOLS_INCLUDED_
 
-
-#ifdef ZMQMESSAGE_HEADERONLY
-# include "zmqmessage/ZmqToolsFullImpl.hpp"
-#endif
