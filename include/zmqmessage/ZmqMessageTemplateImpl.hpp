@@ -32,14 +32,8 @@ namespace ZmqMessage
       cur_ = T();
       return;
     }
-    if (binary_mode_)
-    {
-      get_bin(*(messages_[idx_]), cur_);
-    }
-    else
-    {
-      cur_ = get<T>(*(messages_[idx_]), cur_);
-    }
+
+    get(*(messages_[idx_]), cur_, binary_mode_);
   }
 
   template <class RoutingPolicy>
@@ -48,14 +42,7 @@ namespace ZmqMessage
   Incoming<RoutingPolicy>::operator>> (T& t) throw(NoSuchPartError)
   {
     check_has_part(cur_extract_idx_);
-    if (binary_mode_)
-    {
-      get_bin(*(parts_[cur_extract_idx_++]), t);
-    }
-    else
-    {
-      t = get<T>(*(parts_[cur_extract_idx_++]), t);
-    }
+    get(*(parts_[cur_extract_idx_++]), t, binary_mode_);
     return *this;
   }
 
@@ -65,14 +52,8 @@ namespace ZmqMessage
   Outgoing<RoutingPolicy>::operator<< (const T& t) throw (ZmqErrorType)
   {
     MsgPtr msg(new zmq::message_t);
-    if (options_ & OutOptions::BINARY_MODE)
-    {
-      init_msg(&t, sizeof(T), *msg);
-    }
-    else
-    {
-      init_msg(t, *msg);
-    }
+    bool binary_mode = options_ & OutOptions::BINARY_MODE;
+    init_msg(t, *msg, binary_mode);
     send_owned(msg.release());
     return *this;
   }

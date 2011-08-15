@@ -449,6 +449,7 @@ namespace ZmqMessage
     /**
      * @return zmq socket to receive message parts from
      */
+    inline
     zmq::socket_t&
     src()
     {
@@ -459,7 +460,8 @@ namespace ZmqMessage
      * @return true if we have detected, that no more message parts are
      * accessible on socket (all parts are received).
      */
-    inline bool
+    inline
+    bool
     is_terminal() const
     {
       return is_terminal_;

@@ -14,54 +14,6 @@
 namespace ZmqMessage
 {
   /**
-   * Get message contents
-   * For string messages (containing characters, possibly not null-terminated)
-   * @param message zmq message
-   * @tparam T class supporting string operations (@see Private::IsStr)
-   */
-  template <typename T>
-  inline
-  T
-  get(zmq::message_t& message, T&,
-    typename Private::EnableIf<Private::IsStr<T>::value>::type* = 0)
-  {
-    return T(static_cast<char*>(message.data()), message.size());
-  }
-
-  /**
-   * Get message contents
-   * For non-string types.
-   * Use for text messages with content writable to stream and readable as type T.
-   * (ex. if T is int: "678" -> 678)
-   * @param message zmq message
-   * @return the converted content
-   */
-  template <typename T>
-  inline
-  T
-  get(zmq::message_t& message, T&,
-      typename Private::DisableIf<Private::IsStr<T>::value>::type* = 0,
-      typename Private::DisableIf<Private::IsRaw<T>::value>::type* = 0)
-  {
-    std::stringstream ss;
-    ss.write(static_cast<char*>(message.data()), message.size());
-    T t;
-    ss >> t;
-    return t;
-  }
-
-  template <typename T>
-  inline
-  T&
-  get(zmq::message_t& message, T& t,
-      typename Private::DisableIf<Private::IsStr<T>::value>::type* = 0,
-      typename Private::EnableIf<Private::IsRaw<T>::value>::type* = 0)
-  {
-    get_bin(message, t);
-    return t;
-  }
-
-  /**
    * Put binary message contents into existing variable.
    * For binary messages containing elementary types or properly aligned PODs
    * @param message zmq message
@@ -85,6 +37,137 @@ namespace ZmqMessage
   get_bin(zmq::message_t& message)
   {
     return *(reinterpret_cast<T*>(message.data()));
+  }
+
+  /**
+   * Get message contents
+   * For string-like types.
+   * Message should contain characters, possibly not null-terminated.
+   * @param message zmq message
+   * @tparam T class supporting string operations (@see Private::IsStr)
+   */
+  template <typename T>
+  inline
+  T
+  get(zmq::message_t& message,
+    typename Private::EnableIf<Private::IsStr<T>::value>::type* = 0)
+  {
+    return T(static_cast<char*>(message.data()), message.size());
+  }
+
+  /**
+   * Get message contents.
+   * For non-string types. Message content converted to T
+   * as character stream or binary data. It's written to stream and read
+   * as type T. ex. if T is int: "678" -> 678.
+   * @param message zmq message
+   * @return the converted content
+   */
+  template <typename T>
+  inline
+  T
+  get(zmq::message_t& message,
+    typename Private::DisableIf<Private::IsStr<T>::value>::type* = 0,
+    typename Private::DisableIf<Private::IsRaw<T>::value>::type* = 0)
+  {
+    std::stringstream ss;
+    ss.write(static_cast<char*>(message.data()), message.size());
+    T t;
+    ss >> t;
+    return t;
+  }
+
+  /**
+   * Get message contents.
+   * For types explicitly marked as raw (containing raw_mark typedef)
+   * @param message zmq message
+   * @tparam T containing raw_mark typedef (@see Private::IsRaw)
+   */
+  template <typename T>
+  inline
+  T
+  get(zmq::message_t& message,
+    typename Private::DisableIf<Private::IsStr<T>::value>::type* = 0,
+    typename Private::EnableIf<Private::IsRaw<T>::value>::type* = 0)
+  {
+    return get_bin<T>(message);
+  }
+
+  /**
+   * Get message contents into existing variable.
+   * For string-like types.
+   * Message should contain characters, possibly not null-terminated.
+   * @param message zmq message
+   * @tparam T class supporting string operations (@see Private::IsStr)
+   */
+  template <typename T>
+  inline
+  void
+  get(zmq::message_t& message, T& t,
+    typename Private::EnableIf<Private::IsStr<T>::value>::type* = 0)
+  {
+    t = T(static_cast<char*>(message.data()), message.size());
+  }
+
+  /**
+   * Get message contents into existing variable.
+   * For non-string types. Message content converted to T
+   * as character stream or binary data. It's written to stream and read
+   * as type T. ex. if T is int: "678" -> 678.
+   * @param message zmq message
+   * @return the converted content
+   */
+  template <typename T>
+  inline
+  void
+  get(zmq::message_t& message, T& t,
+    typename Private::DisableIf<Private::IsStr<T>::value>::type* = 0,
+    typename Private::DisableIf<Private::IsRaw<T>::value>::type* = 0)
+  {
+    std::stringstream ss;
+    ss.write(static_cast<char*>(message.data()), message.size());
+    ss >> t;
+  }
+
+  /**
+   * Get message contents into existing variable.
+   * For types explicitly marked as raw (containing raw_mark typedef)
+   * @param message zmq message
+   * @tparam T containing raw_mark typedef (@see Private::IsRaw)
+   */
+  template <typename T>
+  inline
+  void
+  get(zmq::message_t& message, T& t,
+    typename Private::DisableIf<Private::IsStr<T>::value>::type* = 0,
+    typename Private::EnableIf<Private::IsRaw<T>::value>::type* = 0)
+  {
+    get_bin(message, t);
+  }
+
+  /**
+   * Get message contents, treating it either as binary data
+   * or character stream (as determined by binary_mode parameter).
+   */
+  template <typename T>
+  inline
+  T
+  get(zmq::message_t& message, bool binary_mode)
+  {
+    return binary_mode ? get_bin<T>(message) : get<T>(message);
+  }
+
+  /**
+   * Get message contents into existing variable,
+   * treating it either as binary data
+   * or character stream (as determined by binary_mode parameter).
+   */
+  template <typename T>
+  inline
+  void
+  get(zmq::message_t& message, T& t,  bool binary_mode)
+  {
+    binary_mode ? get_bin(message, t) : get(message, t);
   }
 
   /**
@@ -178,9 +261,9 @@ namespace ZmqMessage
   }
 
   /**
-   * Initialize zmq message with copy of given data.
+   * Initialize zmq message with copy of given data (binary).
    * (created duplicate of buffer will be owned by zmq message
-   * and will be destroyed by it)
+   * and will be destroyed by it).
    */
   void
   init_msg(const void* t, size_t sz, zmq::message_t& msg);
@@ -215,7 +298,8 @@ namespace ZmqMessage
 
   /*
    * Initialize zmq message by arbitrary (non-string) type to send
-   * in binary form
+   * in binary form.
+   * For types explicitly marked as raw (containing raw_mark typedef)
    */
   template <class T>
   inline void
@@ -233,6 +317,29 @@ namespace ZmqMessage
   init_msg(const char* t, zmq::message_t& msg)
   {
     init_msg(t, strlen(t), msg);
+  }
+
+  /**
+   * Initialize zmq message with variable treated as binary data.
+   * For elementary types or properly aligned PODs.
+   */
+  template <class T>
+  inline void
+  init_msg_bin(const T& t, zmq::message_t& msg)
+  {
+    init_msg(&t, sizeof(T), msg);
+  }
+
+  /**
+   * Initialize zmq message with variable treated either as binary data or
+   * something that can be written to stream
+   * (depending on binary_mode parameter).
+   */
+  template <class T>
+  inline void
+  init_msg(const T& t, zmq::message_t& msg, bool binary_mode)
+  {
+    binary_mode ? init_msg_bin(t, msg) : init_msg(t, msg);
   }
 
 
