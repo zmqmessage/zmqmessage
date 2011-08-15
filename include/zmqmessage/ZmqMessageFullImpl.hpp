@@ -85,6 +85,10 @@ namespace ZmqMessage
   XRouting::receive_routing(zmq::socket_t& sock)
     throw (MessageFormatError, ZmqErrorType)
   {
+    if (!routing_.empty())
+    {
+      return;
+    }
     routing_.reserve(3); //should be enough for most cases
     for (int i = 0; ; ++i)
     {
@@ -116,6 +120,20 @@ namespace ZmqMessage
         routing_.begin(), routing_.end(),
         &Private::del_obj_not_null<zmq::message_t>
     );
+  }
+
+  template <class RoutingPolicy>
+  void
+  Incoming<RoutingPolicy>::check_is_terminal() const throw(MessageFormatError)
+  {
+    if (!is_terminal_)
+    {
+      std::ostringstream ss;
+      ss <<
+        "Receiving multipart "
+        "Has more messages after part " << size() << ", but must be terminal";
+      throw MessageFormatError(ss.str());
+    }
   }
 
   template <class RoutingPolicy>
@@ -159,7 +177,7 @@ namespace ZmqMessage
     RoutingPolicy::receive_routing(src_);
     RoutingPolicy::log_routing_received();
 
-    for (size_t i = 0; i < parts; ++i)
+    for (size_t i = 0, init_parts = size(); i < parts; ++i)
     {
       bool more = receive_one();
       const char* const part_name =
@@ -172,7 +190,7 @@ namespace ZmqMessage
         ss <<
           "Receiving multipart: "
           "No more messages after " << part_name <<
-          "(" << i << "), expected more";
+          "(" << (init_parts + i) << "), expected more";
         throw MessageFormatError(ss.str());
       }
       if (i == parts - 1 && more)
@@ -184,7 +202,7 @@ namespace ZmqMessage
           ss <<
             "Receiving multipart: "
             "Has more messages after " << part_name <<
-            "(" << i << "), expected no more messages";
+            "(" << (init_parts + i) << "), expected no more messages";
           throw MessageFormatError(ss.str());
         }
       }
