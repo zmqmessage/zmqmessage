@@ -12,8 +12,7 @@ namespace ZmqMessage
   /**
    * @namespace ZmqMessage::Private
    * @brief For internal usage
-   *   to determine proper way to pass a particular
-   *   data type.
+   *   to determine the proper way to pass a particular data type.
    */
   namespace Private
   {
