@@ -164,6 +164,15 @@ void test(zmq::context_t& ctx_, const char* name)
   std::cout << "main: threads joined" << std::endl;
 }
 
+void test_time()
+{
+  char* str = (char*)malloc(6);
+  strcpy(str, "-8956");
+  zmq::message_t msg(str, 3, &my_free); // -89
+  time_t tm = ZmqMessage::get_time(msg);
+  assert(tm == -89);
+}
+
 int main()
 {
   zmq::context_t ctx(1);
@@ -179,5 +188,7 @@ int main()
   test<ZmqMessage::XRouting, ZMQ_XREQ, ZmqMessage::XRouting, ZMQ_XREP>(
     ctx, "X to X routing");
 
+  //small tests
+  test_time();
   return 0;
 }
