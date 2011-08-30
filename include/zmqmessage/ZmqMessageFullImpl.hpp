@@ -313,6 +313,20 @@ namespace ZmqMessage
     return *this;
   }
 
+  Sink&
+  NullMessage(Sink& out)
+  {
+    out << new zmq::message_t(0);
+    return out;
+  }
+
+  Sink&
+  Flush(Sink& out)
+  {
+    out.flush();
+    return out;
+  }
+
   template <>
   void
   Outgoing<SimpleRouting>::send_routing(
@@ -334,7 +348,7 @@ namespace ZmqMessage
     }
     else
     {
-      bool copy = options_ & OutOptions::COPY_INCOMING;
+      bool copy = options() & OutOptions::COPY_INCOMING;
       for (MsgPtrVec::iterator it = routing->begin();
           it != routing->end(); ++it)
       {
@@ -348,9 +362,8 @@ namespace ZmqMessage
     }
   }
 
-  template <class RoutingPolicy>
-  Outgoing<RoutingPolicy>&
-  Outgoing<RoutingPolicy>::operator<< (zmq::message_t& msg)
+  Sink&
+  Sink::operator<< (zmq::message_t& msg)
     throw (ZmqErrorType)
   {
     bool copy_mode = options_ & OutOptions::COPY_INCOMING;
@@ -372,9 +385,8 @@ namespace ZmqMessage
     return *this;
   }
 
-  template <class RoutingPolicy>
-  Outgoing<RoutingPolicy>&
-  Outgoing<RoutingPolicy>::operator<< (const RawMessage& m)
+  Sink&
+  Sink::operator<< (const RawMessage& m)
     throw (ZmqErrorType)
   {
     if (m.deleter)
@@ -390,17 +402,15 @@ namespace ZmqMessage
     return *this;
   }
 
-  template <class RoutingPolicy>
   void
-  Outgoing<RoutingPolicy>::add_to_queue(
+  Sink::add_to_queue(
     zmq::message_t* msg)
   {
     outgoing_queue_->parts_.push_back(msg);
   }
 
-  template <class RoutingPolicy>
   void
-  Outgoing<RoutingPolicy>::do_send_one(
+  Sink::do_send_one(
     zmq::message_t* msg, bool last)
     throw (ZmqErrorType)
   {
@@ -417,9 +427,8 @@ namespace ZmqMessage
     send_msg(dst_, *msg, flag);
   }
 
-  template <class RoutingPolicy>
   bool
-  Outgoing<RoutingPolicy>::try_send_first_cached(bool last)
+  Sink::try_send_first_cached(bool last)
     throw(ZmqErrorType)
   {
     assert(state_ == NOTSENT);
@@ -479,9 +488,8 @@ namespace ZmqMessage
     return ret;
   }
 
-  template <class RoutingPolicy>
   void
-  Outgoing<RoutingPolicy>::send_one(
+  Sink::send_one(
     zmq::message_t* msg, bool use_copy) throw(ZmqErrorType)
   {
     MsgPtr p(0);
@@ -497,9 +505,8 @@ namespace ZmqMessage
     send_owned(p.release());
   }
 
-  template <class RoutingPolicy>
   void
-  Outgoing<RoutingPolicy>::send_owned(
+  Sink::send_owned(
     zmq::message_t* owned) throw(ZmqErrorType)
   {
     MsgPtr msg(owned);
@@ -553,9 +560,8 @@ namespace ZmqMessage
     }
   }
 
-  template <class RoutingPolicy>
   void
-  Outgoing<RoutingPolicy>::flush() throw(ZmqErrorType)
+  Sink::flush() throw(ZmqErrorType)
   {
     if (state_ == DROPPING)
     {
@@ -585,9 +591,8 @@ namespace ZmqMessage
     state_ = FLUSHED;
   }
 
-  template <class RoutingPolicy>
   void
-  Outgoing<RoutingPolicy>::send_incoming_messages(size_t idx_from)
+  Sink::send_incoming_messages(size_t idx_from)
     throw(ZmqErrorType)
   {
     if (!incoming_)
@@ -606,9 +611,8 @@ namespace ZmqMessage
     }
   }
 
-  template <class RoutingPolicy>
   void
-  Outgoing<RoutingPolicy>::relay_from(zmq::socket_t& relay_src)
+  Sink::relay_from(zmq::socket_t& relay_src)
     throw (ZmqErrorType)
   {
     while (has_more(relay_src))
@@ -619,8 +623,7 @@ namespace ZmqMessage
     }
   }
 
-  template <class RoutingPolicy>
-  Outgoing<RoutingPolicy>::~Outgoing()
+  Sink::~Sink()
   {
     try
     {

@@ -21,6 +21,8 @@ namespace ZmqMessage
 
   struct OutOptions;
 
+  class Sink;
+
   template <class RoutingPolicy>
   class Outgoing;
 

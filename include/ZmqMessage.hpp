@@ -124,8 +124,7 @@ namespace ZmqMessage
     void
     clear();
 
-    template <class RoutingPolicy>
-    friend class Outgoing;
+    friend class Sink;
 
     friend void
     send(zmq::socket_t& sock, Multipart& multipart, bool nonblock)
@@ -330,13 +329,8 @@ namespace ZmqMessage
    * When passed to @c Outgoing (operator <<)
    * creates null (empty) message part
    */
-  template<typename RoutingPolicy>
-  Outgoing<RoutingPolicy>&
-  NullMessage(Outgoing<RoutingPolicy>& out)
-  {
-    out.send_owned(new zmq::message_t(0));
-    return out;
-  }
+  Sink&
+  NullMessage(Sink& out);
 
   /**
    * @brief Skip current message part in incoming message
@@ -359,13 +353,8 @@ namespace ZmqMessage
    *
    * Manipulator to finally flush (send/enqueue) the outgoing message.
    */
-  template<typename RoutingPolicy>
-  Outgoing<RoutingPolicy>&
-  Flush(Outgoing<RoutingPolicy>& out)
-  {
-    out.flush();
-    return out;
-  }
+  Sink&
+  Flush(Sink& out);
 
   /**
    * @brief Manipulator to switch to binary mode
@@ -701,23 +690,15 @@ namespace ZmqMessage
   };
 
   /**
-   * @brief Represents outgoing message to be sent.
+   * @brief Base class for Outgoing message,
+   * does not depend on Routing policy.
    *
-   * All message parts are either sent (if possible)
-   * OR become exclusively owned by this object,
-   * if sending of parts immediately would block
-   * and Outgoing created with
-   * OutOptions.NONBLOCK and OutOptions.CACHE_ON_BLOCK.
-   * That Multipart is detachable
-   * (ownership may be yielded, see @c detach() method).
-   * Outgoing message may be linked with corresponding incoming message
-   * (when @c Incoming reference given to constructor).
-   * In this case the ownership of message parts may be transferred
-   * from incoming to outgoing message (by @c operator << on message_t),
-   * to avoid copying.
+   * After Outgoing message is created, it's functionality
+   * (append and send messages, caching, etc.) does not depend
+   * on RoutingPolicy template parameter,
+   * so it may be referenced as Sink class.
    */
-  template <class RoutingPolicy>
-  class Outgoing : private Private::NonCopyable
+  class Sink : private Private::NonCopyable
   {
   public:
     /**
@@ -738,7 +719,7 @@ namespace ZmqMessage
       class AssignProxy
       {
       public:
-        AssignProxy(Outgoing<RoutingPolicy>& outgoing)
+        AssignProxy(Sink& outgoing)
             : outgoing_(outgoing)
         {
         }
@@ -750,12 +731,12 @@ namespace ZmqMessage
         }
 
       private:
-        Outgoing<RoutingPolicy>& outgoing_;
+        Sink& outgoing_;
       };
 
     public:
       explicit
-      iterator(Outgoing<RoutingPolicy>& outgoing)
+      iterator(Sink& outgoing)
           : outgoing_(outgoing)
       {
       }
@@ -791,7 +772,7 @@ namespace ZmqMessage
       }
 
     private:
-      Outgoing<RoutingPolicy>& outgoing_;
+      Sink& outgoing_;
 
       bool
       equal(const iterator<T>& rhs) const
@@ -799,6 +780,7 @@ namespace ZmqMessage
         return false;
       }
     };
+
   private:
     typedef std::auto_ptr<zmq::message_t> MsgPtr;
 
@@ -832,15 +814,25 @@ namespace ZmqMessage
 
     State state_;
 
-    void
-    send_routing(
-      MsgPtrVec* routing) throw(ZmqErrorType);
+  protected:
+    Sink(zmq::socket_t& dst, unsigned options, Multipart* incoming = 0) :
+      dst_(dst), options_(options), incoming_(incoming),
+      outgoing_queue_(0), cached_(0), state_(NOTSENT)
+    {}
+
+    inline
+    unsigned
+    options() const
+    {
+      return options_;
+    }
 
     void
     send_one(
       zmq::message_t* msg, bool use_copy = false)
       throw(ZmqErrorType);
 
+  private:
     void
     send_owned(zmq::message_t* owned) throw(ZmqErrorType);
 
@@ -856,21 +848,190 @@ namespace ZmqMessage
     add_to_queue(zmq::message_t* msg);
 
   public:
+    ~Sink();
+
+     /**
+      * Get pointer to incoming message this outgoing message is linked to.
+      * @return null if not linked.
+      */
+     const Multipart*
+     incoming() const
+     {
+       return incoming_;
+     }
+
+     /**
+      * Detach heap-allocated outgoing queue (Multipart message).
+      * This object's outgoing_queue_ is set to 0.
+      */
+     inline
+     Multipart*
+     detach()
+     {
+       return outgoing_queue_.release();
+     }
+
+     /**
+      * @return if we have enqueued message parts in outgoing queue.
+      */
+     inline
+     bool
+     is_queued() const
+     {
+       return (outgoing_queue_.get() != 0);
+     }
+
+     /**
+      * Immediate send has failed (blocking)
+      * and we are dropping inserted messages
+      */
+     inline
+     bool
+     is_dropping() const
+     {
+       return (state_ == DROPPING);
+     }
+
+     /**
+      * @return destination socket
+      */
+     inline
+     zmq::socket_t&
+     dst()
+     {
+       return dst_;
+     }
+
+     /**
+      * Finally send or enqueue pending (cached) messages if any
+      */
+     void
+     flush() throw(ZmqErrorType);
+
+     void
+     set_binary()
+     {
+       options_ |= OutOptions::BINARY_MODE;
+     }
+
+     void
+     set_text()
+     {
+       options_ &= ~OutOptions::BINARY_MODE;
+     }
+
+     /**
+      * Send all messages contained in @c incoming_ starting from idx_from
+      */
+     void
+     send_incoming_messages(size_t idx_from = 0) throw(ZmqErrorType);
+
+     /**
+      * Receive and send/enqueue pending messages from relay_src socket
+      */
+     void
+     relay_from(zmq::socket_t& relay_src) throw(ZmqErrorType);
+
+     /**
+      * Receive and send/enqueue pending messages from relay_src socket,
+      * counting sizes of received messages
+      * @tparam OccupationAccumulator unary functor accepting size_t
+      */
+     template <class OccupationAccumulator>
+     void
+     relay_from(
+       zmq::socket_t& relay_src, OccupationAccumulator acc)
+       throw (ZmqErrorType);
+
+     /**
+      * Lowest priority in overload. Uses @c ZmqMessage::init_msg functions
+      * to compose message part and send.
+      */
+     template <typename T>
+     Sink&
+     operator<< (const T& t) throw (ZmqErrorType);
+
+     /**
+      * Note, we take ownership on message
+      * (unless message is part of incoming_ and COPY_INCOMING option is set).
+      * We invalidate incoming_'s ownership on this message
+      * (if COPY_INCOMING option is NOT set).
+      * Do not pass stack-allocated messages
+      * if this object is planned to be detached and used beyond current block.
+      */
+     Sink&
+     operator<< (zmq::message_t& msg) throw (ZmqErrorType);
+
+     /**
+      * Either, we take ownership on message.
+      * Not checking if this message is part of incoming_.
+      * If ptr contains 0, null message is sent
+      */
+     inline Sink&
+     operator<< (MsgPtr msg) throw (ZmqErrorType)
+     {
+       send_owned(msg.get() ? msg.release() : new zmq::message_t(0));
+       return *this;
+     }
+
+     /**
+      * Insert raw message (see @c RawMessage)
+      */
+     Sink&
+     operator<< (const RawMessage& m) throw (ZmqErrorType);
+
+     /**
+      * Handle a manipulator
+      */
+     inline Sink&
+     operator<< (Sink& (*f)(Sink&))
+     {
+       return f(*this);
+     }
+  };
+
+  /**
+   * @brief Represents outgoing message to be sent.
+   *
+   * All message parts are either sent (if possible)
+   * OR become exclusively owned by this object,
+   * if sending of parts immediately would block
+   * and Outgoing created with
+   * OutOptions.NONBLOCK and OutOptions.CACHE_ON_BLOCK.
+   * That Multipart is detachable
+   * (ownership may be yielded, see @c detach() method).
+   * Outgoing message may be linked with corresponding incoming message
+   * (when @c Incoming reference given to constructor).
+   * In this case the ownership of message parts may be transferred
+   * from incoming to outgoing message (by @c operator << on message_t),
+   * to avoid copying.
+   */
+  template <class RoutingPolicy>
+  class Outgoing : public Sink
+  {
+  private:
+
+    void
+    send_routing(
+      MsgPtrVec* routing) throw(ZmqErrorType);
+
+  public:
+
+    using Sink::iterator;
+
     /**
      * Routing policy used for sending multipart message
      */
     typedef RoutingPolicy RoutingPolicyType;
 
     Outgoing(zmq::socket_t& dst, unsigned options) :
-      dst_(dst), options_(options), incoming_(0),
-      outgoing_queue_(0), cached_(0), state_(NOTSENT)
+      Sink(dst, options)
     {
       send_routing(0);
     }
 
     explicit Outgoing(OutOptions out_opts) :
-      dst_(out_opts.sock), options_(out_opts.options), incoming_(0),
-      outgoing_queue_(0), cached_(0), state_(NOTSENT)
+      Sink(out_opts.sock, out_opts.options)
     {
       send_routing(0);
     }
@@ -882,9 +1043,8 @@ namespace ZmqMessage
     template <typename InRoutingPolicy>
     Outgoing(zmq::socket_t& dst,
       Incoming<InRoutingPolicy>& incoming,
-      unsigned options) throw(ZmqErrorType):
-      dst_(dst), options_(options), incoming_(&incoming),
-      outgoing_queue_(0), cached_(0), state_(NOTSENT)
+      unsigned options) throw(ZmqErrorType) :
+      Sink(dst, options, &incoming)
     {
       send_routing(incoming.get_routing());
     }
@@ -896,8 +1056,7 @@ namespace ZmqMessage
     template <typename InRoutingPolicy>
     Outgoing(OutOptions out_opts,
       Incoming<InRoutingPolicy>& incoming) throw(ZmqErrorType) :
-      dst_(out_opts.sock), options_(out_opts.options), incoming_(&incoming),
-      outgoing_queue_(0), cached_(0), state_(NOTSENT)
+      Sink(out_opts.sock, out_opts.options, &incoming)
     {
       send_routing(incoming.get_routing());
     }
@@ -908,9 +1067,8 @@ namespace ZmqMessage
      */
     Outgoing(zmq::socket_t& dst,
       Multipart& incoming,
-      unsigned options) throw(ZmqErrorType):
-      dst_(dst), options_(options), incoming_(&incoming),
-      outgoing_queue_(0), cached_(0), state_(NOTSENT)
+      unsigned options) throw(ZmqErrorType) :
+      Sink(dst, options, &incoming)
     {
       send_routing(0);
     }
@@ -921,156 +1079,10 @@ namespace ZmqMessage
      */
     Outgoing(OutOptions out_opts,
       Multipart& incoming) throw(ZmqErrorType) :
-      dst_(out_opts.sock), options_(out_opts.options), incoming_(&incoming),
-      outgoing_queue_(0), cached_(0), state_(NOTSENT)
+      Sink(out_opts.sock, out_opts.options, &incoming)
     {
       send_routing(0);
     }
-
-    ~Outgoing();
-
-    /**
-     * Get pointer to incoming message this outgoing message is linked to.
-     * @return null if not linked.
-     */
-    const Multipart*
-    incoming() const
-    {
-      return incoming_;
-    }
-
-    /**
-     * Detach heap-allocated outgoing queue (Multipart message).
-     * This object's outgoing_queue_ is set to 0.
-     */
-    inline
-    Multipart*
-    detach()
-    {
-      return outgoing_queue_.release();
-    }
-
-    /**
-     * @return if we have enqueued message parts in outgoing queue.
-     */
-    inline
-    bool
-    is_queued() const
-    {
-      return (outgoing_queue_.get() != 0);
-    }
-
-    /**
-     * Immediate send has failed (blocking)
-     * and we are dropping inserted messages
-     */
-    inline
-    bool
-    is_dropping() const
-    {
-      return (state_ == DROPPING);
-    }
-
-    /**
-     * @return destination socket
-     */
-    inline
-    zmq::socket_t&
-    dst()
-    {
-      return dst_;
-    }
-
-    /**
-     * Finally send or enqueue pending (cached) messages if any
-     */
-    void
-    flush() throw(ZmqErrorType);
-
-    void
-    set_binary()
-    {
-      options_ |= OutOptions::BINARY_MODE;
-    }
-
-    void
-    set_text()
-    {
-      options_ &= ~OutOptions::BINARY_MODE;
-    }
-
-    /**
-     * Send all messages contained in @c incoming_ starting from idx_from
-     */
-    void
-    send_incoming_messages(size_t idx_from = 0) throw(ZmqErrorType);
-
-    /**
-     * Receive and send/enqueue pending messages from relay_src socket
-     */
-    void
-    relay_from(zmq::socket_t& relay_src) throw(ZmqErrorType);
-
-    /**
-     * Receive and send/enqueue pending messages from relay_src socket,
-     * counting sizes of received messages
-     * @tparam OccupationAccumulator unary functor accepting size_t
-     */
-    template <class OccupationAccumulator>
-    void
-    relay_from(
-      zmq::socket_t& relay_src, OccupationAccumulator acc)
-      throw (ZmqErrorType);
-
-    /**
-     * Lowest priority in overload. Uses @c ZmqMessage::init_msg functions
-     * to compose message part and send.
-     */
-    template <typename T>
-    Outgoing<RoutingPolicy>&
-    operator<< (const T& t) throw (ZmqErrorType);
-
-    /**
-     * Note, we take ownership on message
-     * (unless message is part of incoming_ and COPY_INCOMING option is set).
-     * We invalidate incoming_'s ownership on this message
-     * (if COPY_INCOMING option is NOT set).
-     * Do not pass stack-allocated messages
-     * if this object is planned to be detached and used beyond current block.
-     */
-    Outgoing<RoutingPolicy>&
-    operator<< (zmq::message_t& msg) throw (ZmqErrorType);
-
-    /**
-     * Either, we take ownership on message.
-     * Not checking if this message is part of incoming_.
-     * If ptr contains 0, null message is sent
-     */
-    inline Outgoing<RoutingPolicy>&
-    operator<< (MsgPtr msg) throw (ZmqErrorType)
-    {
-      send_owned(msg.get() ? msg.release() : new zmq::message_t(0));
-      return *this;
-    }
-
-    /**
-     * Insert raw message (see @c RawMessage)
-     */
-    Outgoing<RoutingPolicy>&
-    operator<< (const RawMessage& m) throw (ZmqErrorType);
-
-    /**
-     * Handle a manipulator
-     */
-    inline Outgoing<RoutingPolicy>&
-    operator<< (Outgoing<RoutingPolicy>& (*f)(Outgoing<RoutingPolicy>&))
-    {
-      return f(*this);
-    }
-
-    friend
-    Outgoing<RoutingPolicy>&
-    NullMessage<RoutingPolicy>(Outgoing<RoutingPolicy>&);
   };
 }
 
