@@ -1,5 +1,5 @@
 /**
- * @file zsort.hpp
+ * @file zsort.cpp
  * Sorting strings in separate thread.
  */
 #include <pthread.h>

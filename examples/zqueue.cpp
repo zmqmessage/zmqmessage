@@ -1,6 +1,6 @@
 /**
- * @file zsort.hpp
- * Sorting strings in separate thread.
+ * @file zqueue.cpp
+ * Not-working example.
  */
 #include "pthread.h"
 
