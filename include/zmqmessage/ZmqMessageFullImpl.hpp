@@ -316,7 +316,7 @@ namespace ZmqMessage
   Sink&
   NullMessage(Sink& out)
   {
-    out << new zmq::message_t(0);
+    out << *(new zmq::message_t(0));
     return out;
   }
 
