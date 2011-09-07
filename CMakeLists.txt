@@ -1,3 +1,7 @@
+# Copyright (c) 2010-2011 Phorm, Inc.
+# License: GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
+# Author: Andrey Skryabin <nifigase@gmail.com>, et al.
+
 cmake_minimum_required(VERSION 2.6)
 
 set(CMAKE_CXX_FLAGS_DEBUG  "-g -Wall"
