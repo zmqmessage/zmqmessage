@@ -1,6 +1,9 @@
 /**
  * @file ZmqToolsFullImpl.hpp
- * @author askryabin
+ * @copyright Copyright (c) 2010-2011 Phorm, Inc.
+ * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
+ * @author Andrey Skryabin <nifigase@gmail.com>, et al.
+ *
  * Full definition of all ZmqMessage tools functions.
  * In HEADERONLY builds, they are included in client code and inlined.
  * They are included either in library code,
