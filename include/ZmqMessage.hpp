@@ -1,7 +1,7 @@
 /**
  * @file ZmqMessage.hpp
  * @copyright Copyright (c) 2010-2011 Phorm, Inc.
- * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
+ * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html
  * @author Andrey Skryabin <andrew@zmqmessage.org>, et al.
  *
  */
@@ -850,6 +850,7 @@ namespace ZmqMessage
     add_to_queue(zmq::message_t* msg);
 
   public:
+    virtual
     ~Sink();
 
      /**
@@ -927,6 +928,13 @@ namespace ZmqMessage
       */
      void
      send_incoming_messages(size_t idx_from = 0) throw(ZmqErrorType);
+
+     /**
+      * Send all messages contained in given incoming starting from idx_from
+      */
+     void
+     send_incoming_messages(Multipart& multipart,
+       bool copy, size_t idx_from = 0) throw(ZmqErrorType);
 
      /**
       * Receive and send/enqueue pending messages from relay_src socket
