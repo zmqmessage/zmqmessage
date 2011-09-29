@@ -595,21 +595,24 @@ namespace ZmqMessage
   }
 
   void
-  Sink::send_incoming_messages(size_t idx_from) throw(ZmqErrorType)
+  Sink::send_incoming_messages(size_t idx_from, size_t idx_to)
+    throw(ZmqErrorType)
   {
     if (!incoming_)
     {
       return;
     }
     bool copy = options_ & OutOptions::COPY_INCOMING;
-    send_incoming_messages(*incoming_, copy, idx_from);
+    send_incoming_messages(*incoming_, copy, idx_from, idx_to);
   }
 
   void
   Sink::send_incoming_messages(Multipart& multipart,
-    bool copy, size_t idx_from) throw(ZmqErrorType)
+    bool copy, size_t idx_from, size_t idx_to)
+    throw(ZmqErrorType)
   {
-    for (size_t i = idx_from; i < multipart.parts_.size(); ++i)
+    size_t to = std::min(idx_to, multipart.parts_.size());
+    for (size_t i = idx_from; i < to; ++i)
     {
       zmq::message_t* msg = multipart.parts_[i];
       if (!copy)
