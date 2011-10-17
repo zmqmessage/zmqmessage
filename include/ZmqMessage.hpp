@@ -123,6 +123,7 @@ namespace ZmqMessage
     check_has_part(size_t n) const throw(NoSuchPartError);
 
   private:
+
     void
     clear();
 
@@ -227,6 +228,24 @@ namespace ZmqMessage
     }
 
     /**
+      * Detach heap-allocated Multipart message
+      * owning all the parts of this multipart.
+      * After this operation, current object owns no message parts.
+      */
+    Multipart*
+    detach();
+
+    /**
+     * Does this multipart message has a part at given index (and owns it)
+     */
+    inline
+    bool
+    has_part(size_t idx)
+    {
+      return (parts_.size() > idx && parts_[idx] != 0);
+    }
+
+    /**
      * Reserve enough memory for given number of message parts
      */
     inline
@@ -323,6 +342,12 @@ namespace ZmqMessage
     zmq::message_t*
     release(size_t i);
 
+    inline
+    std::auto_ptr<zmq::message_t>
+    release_ptr(size_t i)
+    {
+      return std::auto_ptr<zmq::message_t>(release(i));
+    }
   };
 
   /**
@@ -464,6 +489,21 @@ namespace ZmqMessage
      */
     void
     check_is_terminal() const throw(MessageFormatError);
+
+    /**
+     * Validate that message contains definite number of message parts.
+     * @param part_names array of parts names
+     * for error reporting and debug purposes
+     * @param part_names_length length of part_names array
+     * @param strict if true, message MUST contain exactly
+     * @c part_names_length parts. Otherwise it MUST contain at least
+     * @c part_names_length parts.
+     */
+    void
+    validate(
+      const char* part_names[],
+      size_t part_names_length, bool strict)
+      throw (MessageFormatError);
 
     /**
      * Receive definite number of message parts.
