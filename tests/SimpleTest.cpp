@@ -1,7 +1,7 @@
 /**
  * @file SimpleTest.cpp
  * @copyright Copyright (c) 2010-2011 Phorm, Inc.
- * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
+ * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html
  * @author Andrey Skryabin <andrew@zmqmessage.org>, et al.
  *
  *
@@ -176,6 +176,32 @@ void test_time()
   assert(tm == -89);
 }
 
+void
+test_detach()
+{
+  zmq::context_t ctx(1);
+  zmq::socket_t s(ctx, ZMQ_PUSH);
+  ZmqMessage::Outgoing<ZmqMessage::SimpleRouting> out(
+    s,
+    ZmqMessage::OutOptions::EMULATE_BLOCK_SENDS |
+    ZmqMessage::OutOptions::CACHE_ON_BLOCK);
+  out << "ghjfkjh" << 12 << ZmqMessage::NullMessage << ZmqMessage::Flush;
+
+  typedef std::auto_ptr<ZmqMessage::Multipart> MsgPtr;
+  MsgPtr p(out.detach());
+  assert(p->size() == 3);
+  assert(ZmqMessage::get_string((*p)[1]) == "12");
+
+  MsgPtr p2(p->detach());
+  assert(p->size() == 3);
+  assert(!p->has_part(0));
+  assert(!p->has_part(1));
+  assert(!p->has_part(2));
+
+  assert(p2->size() == 3);
+  assert(ZmqMessage::get_string((*p2)[1]) == "12");
+}
+
 int main()
 {
   zmq::context_t ctx(1);
@@ -193,5 +219,6 @@ int main()
 
   //small tests
   test_time();
+  test_detach();
   return 0;
 }
