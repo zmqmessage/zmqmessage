@@ -617,7 +617,6 @@ namespace ZmqMessage
     /**
      * Fetch all messages starting from tail message
      * until there will be no more parts on socket.
-     * We assume that we have used THIS socket on receive() call.
      * So the resulting data will be:
      * { parts_[N-1] | message, ... }
      * @param area - result stored here
