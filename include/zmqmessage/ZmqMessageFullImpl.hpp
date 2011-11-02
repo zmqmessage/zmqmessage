@@ -385,6 +385,7 @@ namespace ZmqMessage
       ZMQMESSAGE_LOG_STREAM <<
         "X route: route vector is empty, send null message only"
         << ZMQMESSAGE_LOG_TERM;
+      add_pending_routing_part();
       send_one(new zmq::message_t, false);
     }
     else
@@ -398,6 +399,7 @@ namespace ZmqMessage
         {
           *it = 0;
         }
+        add_pending_routing_part();
         send_one(msg, copy);
       }
     }
@@ -459,6 +461,11 @@ namespace ZmqMessage
     if (!last) flag |= ZMQ_SNDMORE;
     if (options_ & OutOptions::NONBLOCK) flag |= ZMQ_NOBLOCK;
 
+    if (send_observer_ && pending_routing_parts_ == 0)
+    {
+      send_observer_->on_part(*msg);
+    }
+
     ZMQMESSAGE_LOG_STREAM
       << "Outgoing sending msg, " << msg->size() << " bytes: "
       << ZMQMESSAGE_STRING_CLASS((const char*)msg->data(),
@@ -466,6 +473,11 @@ namespace ZmqMessage
       << ", flag = " << flag << ZMQMESSAGE_LOG_TERM;
 
     send_msg(dst_, *msg, flag);
+
+    if (pending_routing_parts_ > 0)
+    {
+      --pending_routing_parts_;
+    }
   }
 
   bool
@@ -606,30 +618,35 @@ namespace ZmqMessage
   {
     if (state_ == DROPPING)
     {
-      return;
     }
-    if (!cached_.get())
+    else if (!cached_.get())
     {
       state_ = FLUSHED;
-      return;
     }
-
-    //handle cached
-    switch (state_)
+    else
     {
-    case NOTSENT:
-      try_send_first_cached(true);
-      break;
-    case SENDING:
-      do_send_one(cached_.get(), true);
-      break;
+      //handle cached
+      switch (state_)
+      {
+      case NOTSENT:
+        try_send_first_cached(true);
+        break;
+      case SENDING:
+        do_send_one(cached_.get(), true);
+        break;
 
-    default:
-      //cannot be
-      break;
+      default:
+        //cannot be
+        break;
+      }
+      cached_.reset(0);
+      state_ = FLUSHED;
     }
-    cached_.reset(0);
-    state_ = FLUSHED;
+
+    if (send_observer_)
+    {
+      send_observer_->on_flush(state_ == FLUSHED);
+    }
   }
 
   void

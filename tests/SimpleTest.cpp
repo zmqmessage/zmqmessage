@@ -48,6 +48,37 @@ my_free(void *data, void *hint)
   ::free(data);
 }
 
+class CountingObserver : public ZmqMessage::SendObserver
+{
+public:
+  int sent;
+  int flushed_successful;
+  int flushed_failed;
+
+  virtual
+  void
+  on_part(zmq::message_t& msg)
+  {
+    std::cout << "on_part: len = " << msg.size() << std::endl;
+    ++sent;
+  }
+
+  virtual
+  void
+  on_flush(bool send_successful)
+  {
+    if (send_successful)
+    {
+      ++flushed_successful;
+    }
+    else
+    {
+      ++flushed_failed;
+    }
+  }
+
+};
+
 template <typename Routing, int socktype>
 void* req(void* arg)
 {
@@ -62,8 +93,12 @@ void* req(void* arg)
   void* buf = ::malloc(payloadsz);
   memcpy(buf, payload, payloadsz);
 
+  CountingObserver obs;
+
   ZmqMessage::Outgoing<Routing> outgoing(
     s, ZmqMessage::OutOptions::NONBLOCK);
+
+  outgoing.set_send_observer(&obs);
 
   //request
   outgoing << part1 << SECOND_PART <<
@@ -73,6 +108,10 @@ void* req(void* arg)
     ZmqMessage::Flush;
 
   std::cout << "req: request sent" << std::endl;
+
+  assert(obs.flushed_successful == 1);
+  assert(obs.flushed_failed == 0);
+  assert(obs.sent == 5);
 
   //response
   ZmqMessage::Incoming<Routing> incoming(s);
