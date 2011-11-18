@@ -9,7 +9,6 @@
 #include <cstddef>
 #include <vector>
 #include <tr1/array>
-#include <tr1/memory>
 #include <string>
 #include <memory>
 #include <zmq.hpp>
@@ -758,23 +757,17 @@ namespace ZmqMessage
     zmq::socket_t& sock;
     unsigned options;
 
-    typedef std::tr1::shared_ptr<SendObserver> SendObserverPtr;
+    typedef SendObserver* SendObserverPtr;
 
     SendObserverPtr send_observer;
 
     /**
      * Create OutOptions.
-     * Note, that OutOptions takes ownership on SendObserver, if given.
+     * Note, that OutOptions doesn't take ownership on SendObserver.
      */
     inline
     OutOptions(
-      zmq::socket_t& sock_p, unsigned options_p, SendObserver* so = 0) :
-      sock(sock_p), options(options_p), send_observer(so)
-    {}
-
-    inline
-    OutOptions(
-      zmq::socket_t& sock_p, unsigned options_p, SendObserverPtr so) :
+      zmq::socket_t& sock_p, unsigned options_p, SendObserverPtr so = 0) :
       sock(sock_p), options(options_p), send_observer(so)
     {}
   };
@@ -910,14 +903,7 @@ namespace ZmqMessage
 
   protected:
     Sink(zmq::socket_t& dst, unsigned options,
-      OutOptions::SendObserverPtr& so, Multipart* incoming = 0) :
-      dst_(dst), options_(options), send_observer_(so), incoming_(incoming),
-      outgoing_queue_(0), cached_(0), state_(NOTSENT),
-      pending_routing_parts_(0)
-    {}
-
-    Sink(zmq::socket_t& dst, unsigned options,
-      SendObserver* so = 0, Multipart* incoming = 0) :
+      OutOptions::SendObserverPtr so = 0, Multipart* incoming = 0) :
       dst_(dst), options_(options), send_observer_(so), incoming_(incoming),
       outgoing_queue_(0), cached_(0), state_(NOTSENT),
       pending_routing_parts_(0)
@@ -969,7 +955,7 @@ namespace ZmqMessage
     void
     set_send_observer(SendObserver* se)
     {
-      send_observer_.reset(se);
+      send_observer_ = se;
     }
 
     /**

@@ -96,10 +96,10 @@ void* req(void* arg)
   void* buf = ::malloc(payloadsz);
   memcpy(buf, payload, payloadsz);
 
-  CountingObserver* obs = new CountingObserver();
+  CountingObserver obs;
 
   ZmqMessage::Outgoing<Routing> outgoing(
-    ZmqMessage::OutOptions(s, ZmqMessage::OutOptions::NONBLOCK, obs));
+    ZmqMessage::OutOptions(s, ZmqMessage::OutOptions::NONBLOCK, &obs));
 
   //request
   outgoing << part1 << SECOND_PART <<
@@ -110,9 +110,9 @@ void* req(void* arg)
 
   std::cout << "req: request sent" << std::endl;
 
-  assert(obs->flushed_successful == 1);
-  assert(obs->flushed_failed == 0);
-  assert(obs->sent == 5);
+  assert(obs.flushed_successful == 1);
+  assert(obs.flushed_failed == 0);
+  assert(obs.sent == 5);
 
   //response
   ZmqMessage::Incoming<Routing> incoming(s);
