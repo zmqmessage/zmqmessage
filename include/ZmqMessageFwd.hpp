@@ -19,6 +19,8 @@ namespace ZmqMessage
 
   class Multipart;
 
+  class ReceiveObserver;
+
   template <class RoutingPolicy>
   class Incoming;
 

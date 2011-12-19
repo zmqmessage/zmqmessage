@@ -48,22 +48,37 @@ my_free(void *data, void *hint)
   ::free(data);
 }
 
-class CountingObserver : public ZmqMessage::SendObserver
+class CountingObserver :
+  public ZmqMessage::SendObserver, public ZmqMessage::ReceiveObserver
 {
 public:
   int sent;
+  int received;
+  int received_full;
   int flushed_successful;
   int flushed_failed;
 
-  CountingObserver() : sent(0), flushed_successful(0), flushed_failed(0)
+  CountingObserver() : sent(0), received(0), received_full(0),
+    flushed_successful(0), flushed_failed(0)
   {}
 
   virtual
   void
-  on_part(zmq::message_t& msg)
+  on_send_part(zmq::message_t& msg)
   {
     std::cout << "on_part: len = " << msg.size() << std::endl;
     ++sent;
+  }
+
+  virtual
+  void
+  on_receive_part(zmq::message_t& msg, bool has_more)
+  {
+    ++received;
+    if (!has_more)
+    {
+      ++received_full;
+    }
   }
 
   virtual
@@ -160,9 +175,15 @@ void* res(void* arg)
   //request
   ZmqMessage::Incoming<Routing> incoming(s);
 
+  CountingObserver observer;
+  incoming.set_receive_observer(&observer);
+
   incoming.receive(
     ARRAY_LEN(req_parts), req_parts, ARRAY_LEN(req_parts), true);
   std::cout << "res: request received" << std::endl;
+
+  assert(observer.received == ARRAY_LEN(req_parts));
+  assert(observer.received_full == 1);
 
   //extract one
   std::string rec_payload = ZmqMessage::get_string(incoming[2]);

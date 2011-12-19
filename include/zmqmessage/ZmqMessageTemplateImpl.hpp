@@ -1,7 +1,7 @@
 /**
  * @file ZmqMessageTemplateImpl.hpp
  * @copyright Copyright (c) 2010-2011 Phorm, Inc.
- * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
+ * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html
  * @author Andrey Skryabin <andrew@zmqmessage.org>, et al.
  *
  * Definition of template functions.
@@ -63,13 +63,19 @@ namespace ZmqMessage
   template <class OccupationAccumulator>
   void
   Sink::relay_from(
-    zmq::socket_t& relay_src, OccupationAccumulator acc)
+    zmq::socket_t& relay_src, OccupationAccumulator acc,
+    ReceiveObserver* receive_observer)
     throw (ZmqErrorType)
   {
-    while (has_more(relay_src))
+    for (bool more = has_more(relay_src); more; )
     {
       MsgPtr cur_part(new zmq::message_t);
       recv_msg(relay_src, *cur_part);
+      more = has_more(relay_src);
+      if (receive_observer)
+      {
+        receive_observer->on_receive_part(*cur_part, more);
+      }
       size_t sz = cur_part->size();
       acc(sz);
       send_owned(cur_part.release());
