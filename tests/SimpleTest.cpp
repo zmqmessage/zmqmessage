@@ -56,10 +56,9 @@ public:
   int received;
   int received_full;
   int flushed_successful;
-  int flushed_failed;
 
   CountingObserver() : sent(0), received(0), received_full(0),
-    flushed_successful(0), flushed_failed(0)
+    flushed_successful(0)
   {}
 
   virtual
@@ -83,16 +82,9 @@ public:
 
   virtual
   void
-  on_flush(bool send_successful)
+  on_flush()
   {
-    if (send_successful)
-    {
-      ++flushed_successful;
-    }
-    else
-    {
-      ++flushed_failed;
-    }
+    ++flushed_successful;
   }
 
 };
@@ -126,7 +118,6 @@ void* req(void* arg)
   std::cout << "req: request sent" << std::endl;
 
   assert(obs.flushed_successful == 1);
-  assert(obs.flushed_failed == 0);
   assert(obs.sent == 5);
 
   //response
