@@ -1058,7 +1058,7 @@ namespace ZmqMessage
     void
     relay_from(
       zmq::socket_t& relay_src, OccupationAccumulator acc,
-      ReceiveObserver* receive_observer = 0)
+      ReceiveObserver* receive_observer)
     throw (ZmqErrorType);
 
     /**
