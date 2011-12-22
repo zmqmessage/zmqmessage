@@ -350,6 +350,10 @@ namespace ZmqMessage
       }
       num_messages = 1;
     }
+    else
+    {
+      more = has_more(src_);
+    }
 
     for (; more; ++num_messages)
     {
