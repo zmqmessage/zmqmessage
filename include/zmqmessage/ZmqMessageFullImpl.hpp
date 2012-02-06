@@ -461,7 +461,7 @@ namespace ZmqMessage
     if (!last) flag |= ZMQ_SNDMORE;
     if (options_ & OutOptions::NONBLOCK) flag |= ZMQ_NOBLOCK;
 
-    if (send_observer_.get() && pending_routing_parts_ == 0)
+    if (send_observer_ && pending_routing_parts_ == 0)
     {
       send_observer_->on_part(*msg);
     }
@@ -643,7 +643,7 @@ namespace ZmqMessage
       state_ = FLUSHED;
     }
 
-    if (send_observer_.get())
+    if (send_observer_)
     {
       send_observer_->on_flush(state_ == FLUSHED);
     }
