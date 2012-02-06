@@ -2,7 +2,7 @@
  * @file zsort.hpp
  * Sorting strings in separate thread.
  */
-#include "pthread.h"
+#include <pthread.h>
 #include <vector>
 
 #include <zmq.hpp>
