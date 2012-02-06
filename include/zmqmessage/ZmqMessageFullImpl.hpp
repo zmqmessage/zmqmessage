@@ -34,7 +34,7 @@ namespace ZmqMessage
     }
     if (send_observer)
     {
-      send_observer->on_flush(true);
+      send_observer->on_flush();
     }
   }
 
@@ -632,12 +632,9 @@ namespace ZmqMessage
   {
     if (state_ == DROPPING)
     {
+      return;
     }
-    else if (!cached_.get())
-    {
-      state_ = FLUSHED;
-    }
-    else
+    if (cached_.get())
     {
       //handle cached
       switch (state_)
@@ -654,12 +651,15 @@ namespace ZmqMessage
         break;
       }
       cached_.reset(0);
-      state_ = FLUSHED;
     }
 
-    if (send_observer_)
+    if (state_ != FLUSHED)
     {
-      send_observer_->on_flush(state_ == FLUSHED);
+      if (send_observer_)
+      {
+        send_observer_->on_flush();
+      }
+      state_ = FLUSHED;
     }
   }
 

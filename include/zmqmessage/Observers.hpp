@@ -51,13 +51,11 @@ namespace ZmqMessage
     on_send_part(zmq::message_t& msg) = 0;
 
     /**
-     * Sink has been flushed.
-     * @param send_successful If true, all parts are actually sent.
-     * If false, we couldn't send message, it's dropped.
+     * Sink has been flushed (successfully).
      */
     virtual
     void
-    on_flush(bool send_successful) = 0;
+    on_flush() = 0;
 
   protected:
     virtual
