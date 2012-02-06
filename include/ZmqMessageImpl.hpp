@@ -1,6 +1,9 @@
 /**
  * @file ZmqMessageImpl.hpp
- * @author askryabin
+ * @copyright Copyright (c) 2010-2011 Phorm, Inc.
+ * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
+ * @author Andrey Skryabin <nifigase@gmail.com>, et al.
+ *
  * This file generates all definitions.
  * It should be included in ONE .cpp file in your application
  * if you are not linking against ZmqMessage shared library.

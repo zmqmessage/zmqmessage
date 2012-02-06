@@ -1,5 +1,9 @@
 /**
  * @file zqueue.cpp
+ * @copyright Copyright (c) 2010-2011 Phorm, Inc.
+ * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
+ * @author Andrey Skryabin <nifigase@gmail.com>, et al.
+ *
  * Not-working example.
  */
 #include "pthread.h"
