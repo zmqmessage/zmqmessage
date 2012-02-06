@@ -16,6 +16,7 @@
 #include <ZmqMessageFwd.hpp>
 
 #include <zmqmessage/Config.hpp>
+#include <zmqmessage/Observers.hpp>
 #include <zmqmessage/DelObj.hpp>
 #include <zmqmessage/NonCopyable.hpp>
 #include <zmqmessage/MsgPtrVec.hpp>
@@ -52,8 +53,9 @@ namespace ZmqMessage
    * Send given message to destination socket
    */
   void
-  send(zmq::socket_t& sock, Multipart& multipart, bool nonblock)
-  throw(ZmqErrorType);
+  send(zmq::socket_t& sock, Multipart& multipart, bool nonblock,
+    SendObserver* send_observer = 0)
+    throw(ZmqErrorType);
 
 
   // routing policies
@@ -130,7 +132,7 @@ namespace ZmqMessage
     friend class Sink;
 
     friend void
-    send(zmq::socket_t& sock, Multipart& multipart, bool nonblock)
+    send(zmq::socket_t&, Multipart&, bool, SendObserver*)
     throw(ZmqErrorType);
 
   public:
@@ -428,6 +430,8 @@ namespace ZmqMessage
     size_t cur_extract_idx_;
     bool binary_mode_; //!< stream flag to handle conversion
 
+    ReceiveObserver* receive_observer_;
+
     void
     append_message_data(
       zmq::message_t& message, std::vector<char>& area) const;
@@ -438,6 +442,18 @@ namespace ZmqMessage
      */
     bool
     receive_one() throw(ZmqErrorType);
+
+    bool
+    do_receive_msg(zmq::message_t& msg) throw(ZmqErrorType)
+    {
+      recv_msg(src_, msg);
+      bool more = has_more(src_);
+      if (receive_observer_)
+      {
+        receive_observer_->on_receive_part(msg, more);
+      }
+      return more;
+    }
 
     template <class OutRoutingPolicy>
     friend class Outgoing;
@@ -458,8 +474,20 @@ namespace ZmqMessage
 
     explicit Incoming(zmq::socket_t& sock)
     : src_(sock), is_terminal_(false),
-      cur_extract_idx_(0), binary_mode_(false)
+      cur_extract_idx_(0), binary_mode_(false),
+      receive_observer_(0)
     {
+    }
+
+    /**
+     * Assign a pointer to ReceiveObserver object.
+     * Note, that the Incoming does not take ownership on the given object.
+     */
+    inline
+    void
+    set_receive_observer(ReceiveObserver* observer)
+    {
+      receive_observer_ = observer;
     }
 
     /**
@@ -683,37 +711,6 @@ namespace ZmqMessage
     {
       binary_mode_ = false;
     }
-  };
-
-  /**
-   * @brief Observer of outgoing message parts being sent.
-   *
-   * Sink class may be parameterized with an object inherited from
-   * SendObserver.
-   * Observer will be notified when message parts are being sent
-   * and when the entire Sink has been flushed.
-   */
-  class SendObserver
-  {
-  public:
-    /**
-     * Next message part (excluding routing parts) is about to be sent.
-     */
-    virtual
-    void
-    on_part(zmq::message_t& msg) = 0;
-
-    /**
-     * Sink has been flushed.
-     * @param send_successful If true, all parts are actually sent.
-     * If false, we couldn't send message, it's dropped.
-     */
-    virtual
-    void
-    on_flush(bool send_successful) = 0;
-
-    virtual
-    ~SendObserver() {}
   };
 
   /**
@@ -1049,7 +1046,8 @@ namespace ZmqMessage
      * Receive and send/enqueue pending messages from relay_src socket
      */
     void
-    relay_from(zmq::socket_t& relay_src) throw(ZmqErrorType);
+    relay_from(zmq::socket_t& relay_src,
+      ReceiveObserver* receive_observer = 0) throw(ZmqErrorType);
 
     /**
      * Receive and send/enqueue pending messages from relay_src socket,
@@ -1059,7 +1057,8 @@ namespace ZmqMessage
     template <class OccupationAccumulator>
     void
     relay_from(
-      zmq::socket_t& relay_src, OccupationAccumulator acc)
+      zmq::socket_t& relay_src, OccupationAccumulator acc,
+      ReceiveObserver* receive_observer = 0)
     throw (ZmqErrorType);
 
     /**

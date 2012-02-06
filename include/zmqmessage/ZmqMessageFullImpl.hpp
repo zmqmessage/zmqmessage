@@ -18,14 +18,23 @@
 namespace ZmqMessage
 {
   void
-  send(zmq::socket_t& sock, Multipart& multipart, bool nonblock)
+  send(zmq::socket_t& sock, Multipart& multipart, bool nonblock,
+    SendObserver* send_observer)
     throw(ZmqErrorType)
   {
     int base_flags = nonblock ? ZMQ_NOBLOCK : 0;
     for (size_t i = 0; i < multipart.size(); ++i)
     {
       int flags = base_flags | ((i < multipart.size()-1) ? ZMQ_SNDMORE : 0);
+      if (send_observer)
+      {
+        send_observer->on_send_part(*(multipart.parts_[i]));
+      }
       send_msg(sock, *(multipart.parts_[i]), flags);
+    }
+    if (send_observer)
+    {
+      send_observer->on_flush(true);
     }
   }
 
@@ -169,8 +178,7 @@ namespace ZmqMessage
     parts_.push_back(new zmq::message_t);
     zmq::message_t& cur_part = *(parts_.back());
 
-    recv_msg(src_, cur_part);
-    bool more = has_more(src_);
+    bool more = do_receive_msg(cur_part);
 
     ZMQMESSAGE_LOG_STREAM << "Incoming received "
       << cur_part.size() << " bytes: "
@@ -302,7 +310,7 @@ namespace ZmqMessage
     size_t delim_sz = (delimiter) ? ::strlen(delimiter) : 0;
 
     int num_messages = 1;
-    for (; has_more(src_); ++num_messages)
+    for (bool more = has_more(src_); more; ++num_messages)
     {
       if (delim_sz)
       {
@@ -311,7 +319,7 @@ namespace ZmqMessage
         std::copy(delimiter, delimiter + delim_sz, area.begin() + sz);
       }
       zmq::message_t data_buff;
-      recv_msg(src_, data_buff);
+      more = do_receive_msg(data_buff);
       append_message_data(data_buff, area);
     }
     return num_messages;
@@ -327,6 +335,7 @@ namespace ZmqMessage
     }
 
     zmq::message_t data_buff;
+    bool more = false;
     int num_messages = 0;
     if (parts_.empty()) //we haven't received anything
     {
@@ -334,12 +343,17 @@ namespace ZmqMessage
       {
         return 0;
       }
+      more = has_more(src_);
+      if (receive_observer_)
+      {
+        receive_observer_->on_receive_part(data_buff, more);
+      }
       num_messages = 1;
     }
 
-    for (; has_more(src_); ++num_messages)
+    for (; more; ++num_messages)
     {
-      recv_msg(src_, data_buff);
+      more = do_receive_msg(data_buff);
     }
     return num_messages;
   }
@@ -463,7 +477,7 @@ namespace ZmqMessage
 
     if (send_observer_ && pending_routing_parts_ == 0)
     {
-      send_observer_->on_part(*msg);
+      send_observer_->on_send_part(*msg);
     }
 
     ZMQMESSAGE_LOG_STREAM
@@ -679,13 +693,19 @@ namespace ZmqMessage
   }
 
   void
-  Sink::relay_from(zmq::socket_t& relay_src)
+  Sink::relay_from(
+    zmq::socket_t& relay_src, ReceiveObserver* receive_observer)
     throw (ZmqErrorType)
   {
-    while (has_more(relay_src))
+    for (bool more = has_more(relay_src); more; )
     {
       MsgPtr cur_part(new zmq::message_t);
       recv_msg(relay_src, *cur_part);
+      more = has_more(relay_src);
+      if (receive_observer)
+      {
+        receive_observer->on_receive_part(*cur_part, more);
+      }
       send_owned(cur_part.release());
     }
   }
