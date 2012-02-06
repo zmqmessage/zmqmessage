@@ -59,8 +59,6 @@
  * @endcode
  */
 #ifndef ZMQMESSAGE_LOG_STREAM
-//just to generate correct docs
-#define ZMQMESSAGE_LOG_STREAM aa
 #include <iostream>
 # ifdef NDEBUG
 #  define ZMQMESSAGE_LOG_STREAM ZMQMESSAGE_LOG_STREAM_NONE
