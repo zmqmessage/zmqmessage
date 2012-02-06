@@ -415,6 +415,10 @@ namespace ZmqMessage
             ZMQMESSAGE_LOG_TERM;
           state_ = DROPPING;
         }
+        else
+        {
+          throw;
+        }
       }
       else
       {
@@ -467,7 +471,10 @@ namespace ZmqMessage
       }
       else
       {
-        add_to_queue(msg.release());
+        if (state_ == QUEUEING)
+        {
+          add_to_queue(msg.release());
+        }
       }
 
       break;
