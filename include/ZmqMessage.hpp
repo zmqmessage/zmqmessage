@@ -752,6 +752,10 @@ namespace ZmqMessage
 
     std::auto_ptr<Multipart> outgoing_queue_;
 
+    /**
+     * Keep message part until next part or flush
+     *  to determine if the part is the latest in the message
+     */
     MsgPtr cached_;
 
     enum State
