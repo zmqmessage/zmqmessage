@@ -2,7 +2,7 @@
  * @file ZmqMessageFullImpl.hpp
  * @copyright Copyright (c) 2010-2011 Phorm, Inc.
  * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
- * @author Andrey Skryabin <nifigase@gmail.com>, et al.
+ * @author Andrey Skryabin <andrew@zmqmessage.org>, et al.
  *
  * Full definition of all ZmqMessage objects methods.
  * In HEADERONLY builds, they are included in client code.
