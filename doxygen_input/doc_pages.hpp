@@ -465,6 +465,8 @@ if (cmd == "SET_PARAM")
 
   //message with parameter 2 contains binary data (unsigned 32 bit integer)
   uint32_t param2 = ZmqMessage::get_bin<uint32_t>(incoming[2]);
+  //or this way (second parameter defines binary/text mode)
+  uint32_t param2_copy = ZmqMessage::get<uint32_t>(incoming[2], true);
 
   //...
 }
