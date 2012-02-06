@@ -4,15 +4,10 @@
  *
  */
 
-#include "ZmqMessage.hpp"
+//#define ZMQMESSAGE_CONFIGURATION_HEADER "zmqmessage/Config.hpp"
 
-#include "zmqmessage/ZmqMessageFullImpl.hpp"
+#ifdef ZMQMESSAGE_CONFIGURATION_HEADER
+# include ZMQMESSAGE_CONFIGURATION_HEADER
+#endif
 
-namespace ZmqMessage
-{
-  //explicit template instantiations - it brings the code
-  template class Incoming<SimpleRouting>;
-  template class Incoming<XRouting>;
-  template class Outgoing<SimpleRouting>;
-  template class Outgoing<XRouting>;
-}
+#include "ZmqMessageImpl.hpp"

@@ -19,6 +19,14 @@ set(
   PATH "CMake modules search path"
 )
 
+# additional configuration
+set(
+  ZMQMESSAGE_CONFIGURATION_HEADER
+  ""
+  CACHE
+  PATH "User-supplied header with macro definitions which will be included. Leave empty for default build"
+)
+
 # all compiled executables and libraries
 # will be created inside "${BUILD_DIR}/bin"
 # and "${BUILD_DIR}/lib" directories

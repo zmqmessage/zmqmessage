@@ -7,10 +7,9 @@ Sending and receiving <a href="http://www.zeromq.org">ZeroMQ</a> \ref zm_multipa
 due to routing policies</li>
 <li>Checking for multipart message consistency when receiving
 (if number of parts to be received is known in advance)
-<li>Using library as haeder-only (more configurable) or linking with shared library
-(see \ref ref_configuring "configuring" for details)</li>
+<li>Using library as built-in (more configurable) or linking with shared library
+(see \ref ref_linking_options "linking options" for details)</li>
 <li>Configurable to use application-specific logging and exception policies
-(in header-only builds or with rebuilding shared library)
 </li>
 <li>Possibility to use user-supplied string-like classes to avoid copying</li>
 <li>Supporting iterators, insert (<<) operator for outgoing messages and
@@ -153,9 +152,30 @@ $ make install
 
 That's all.
 
+If you wish to build shared library with custom exceptions
+(\ref ZMQMESSAGE_EXCEPTION_MACRO) or with \ref ZMQMESSAGE_WRAP_ZMQ_ERROR defined,
+you may create .hpp file with definitions of these exceptions.
+\code
+//@file mydefs.hpp
+
+#define ZMQMESSAGE_WRAP_ZMQ_ERROR
+
+#define ZMQMESSAGE_EXCEPTION_MACRO(name) \
+  class name \
+  { \
+  .... \
+  }
+
+\endcode
+
+On "cmake" step you can force include the file:
+\code
+$ cmake -DZMQMESSAGE_CONFIGURATION_HEADER=/path/to/mydefs.hpp ..
+\endcode
+
 Note, that building shared library is not really necessary,
-as ZmqMessage library may be used as header-only.
-See \ref ref_configuring "configuring" section in tutorial for details.
+as ZmqMessage library may be compiled in your binary.
+See \ref ref_linking_options "linking options" section in tutorial for details.
  */
 
 /** \page zm_performance
@@ -270,6 +290,7 @@ See example zserialize.cpp for details.
 <div class="zm_toc">
 <ul>
   <li>\ref ref_configuring "Configuring library to integarte smoothly into your application"</li>
+  <li>\ref ref_linking_options "Linking options"</li>
   <li>\ref ref_receiving "Receiving messages"</li>
   <li>\ref ref_sending "Sending messages"</li>
 </ul>
@@ -288,22 +309,6 @@ Though none of these definitions are mandatory.
 These constants are:
 
 <ul>
-<li>
-\code
-ZMQMESSAGE_HEADERONLY
-\endcode
-@copydoc ZMQMESSAGE_HEADERONLY
-
-If you prefer to link and need extensive configuration, the following problem may arise:
-library is built separately, with definite and basically default configuration
-(\ref ZMQMESSAGE_LOG_STREAM, \ref ZMQMESSAGE_EXCEPTION_MACRO),
-So if you need to override them in your application,
-you really need to <b>rebuild shared library</b> with appropriate definitions
-(the same as you define in your application).
-For non header-only builds you may freely define only \ref ZMQMESSAGE_STRING_CLASS
-(cause it is used only in template instantiations).
-Or just use library as header-only and configure whatever you want.
-</li>
 
 <li>
 \code
@@ -342,6 +347,47 @@ ZMQMESSAGE_WRAP_ZMQ_ERROR
 
 </ul>
 
+\anchor ref_linking_options
+<h3>Linking options</h3>
+
+<ol>
+<li>
+You may build ZmqMessage as shared library (see \ref zm_build "build instructions")
+and link against it. But if you need extensive configuration, the following problem may arise:
+library is built separately, with definite and basically default configuration
+(\ref ZMQMESSAGE_LOG_STREAM, \ref ZMQMESSAGE_EXCEPTION_MACRO, \ref ZMQMESSAGE_WRAP_ZMQ_ERROR),
+So if you need to override them in your application,
+you really need to \ref zm_build "rebuild shared library" with appropriate definitions
+(the same as you define in your application), otherwise you can get the link error as following:
+\code
+In function `__static_initialization_and_destruction_0':
+/home/andrey_skryabin/projects/zmqmessage/include/zmqmessage/TypeCheck.hpp:32: undefined reference to `ZmqMessage::Private::TypeCheck<ZmqMessage::MessageFormatError, ZmqMessage::NoSuchPartError, zmq::error_t>::value'
+collect2: ld returned 1 exit status
+\endcode
+That's because we check that generated types are the same.
+Link with shared library if you don't need extensive configuration or if it's not too cumbersome
+for you to rebuild shared library with the same configuration.
+</li>
+<li>
+Do not link against shared library. In this case you MUST include implementation
+code in ONE of your .cpp files in order to assemble you binary:
+\code
+
+//@file foo.cpp
+
+//make definitions available for linking
+#include "ZmqMessageImpl.hpp"
+
+...
+
+\endcode
+Do not include "ZmqMessageImpl.hpp" on more than one .cpp file,
+or you will get multiple definitions and thus link error.
+
+Such approach is better than header-only, cause it reduces compilation time.
+
+</li></ol>
+
 \anchor ref_receiving
 <h3>Receiving messages</h3>
 To receive multipart message, you create instance of ZmqMessage::Incoming.
@@ -349,6 +395,7 @@ For XREQ and XREP socket types use \ref ZmqMessage::XRouting as template paramet
 for other socket types use \ref ZmqMessage::SimpleRouting.
 
 \code
+#include "ZmqMessage.hpp"
 
 zmq::context_t ctx(1);
 zmq::socket sock(ctx, ZMQ_PULL); //will use SimpleRouting
@@ -434,6 +481,7 @@ For sending to XREQ and XREP socket types use \ref ZmqMessage::XRouting as templ
 for other socket types use \ref ZmqMessage::SimpleRouting.
 
 \code
+#include "ZmqMessage.hpp"
 
 zmq::context_t ctx(1);
 zmq::socket sock(ctx, ZMQ_XREQ); //will use XRouting

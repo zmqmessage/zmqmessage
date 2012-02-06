@@ -8,6 +8,8 @@
 #include <functional>
 #include <algorithm>
 
+#include "zmqmessage/TypeCheck.hpp"
+
 #ifndef ZMQMESSAGE_ZMQMESSAGETEMPLATEIMPL_HPP_
 #define ZMQMESSAGE_ZMQMESSAGETEMPLATEIMPL_HPP_
 

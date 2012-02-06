@@ -19,7 +19,7 @@ add_executable(SimpleTestHO
   SimpleTest.cpp
 )
 set_target_properties(SimpleTestHO
-  PROPERTIES COMPILE_DEFINITIONS "ZMQMESSAGE_HEADERONLY"
+  PROPERTIES COMPILE_DEFINITIONS "HEADERONLY"
 )
 target_link_libraries(SimpleTestHO
  pthread
