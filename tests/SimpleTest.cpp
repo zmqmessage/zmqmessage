@@ -183,9 +183,13 @@ void* res(void* arg)
   //extract all
   std::string part1, part2, part3;
   int part4, part5;
-  incoming >> part1 >> part2 >> part3 >>
+  assert(incoming.extracted() == 0);
+  incoming >> part1 >> part2 >> part3;
+  assert(incoming.extracted() == 3);
+  incoming >>
     ZmqMessage::Binary >> part4 >>
     ZmqMessage::Text >> part5;
+  assert(incoming.extracted() == 5);
   assert(part2 == SECOND_PART);
   assert(part4 == BIN_PART);
   assert(part5 == NUM_TEXT_PART);

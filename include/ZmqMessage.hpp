@@ -491,6 +491,17 @@ namespace ZmqMessage
     }
 
     /**
+     * @return receive observer previously set with set_receive_observer
+     * or 0 if it's not set.
+     */
+    inline
+    ReceiveObserver*
+    receive_observer()
+    {
+      return receive_observer_;
+    }
+
+    /**
      * @return zmq socket to receive message parts from
      */
     inline
@@ -517,6 +528,15 @@ namespace ZmqMessage
      */
     void
     check_is_terminal() const throw(MessageFormatError);
+
+    /**
+     * Number of variables extracted (with operator >>) from this multipart.
+     */
+    size_t
+    extracted() const
+    {
+      return cur_extract_idx_;
+    }
 
     /**
      * Validate that message contains definite number of message parts.
