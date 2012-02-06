@@ -42,8 +42,8 @@ namespace ZmqMessage
   Multipart*
   Multipart::detach()
   {
-    std::auto_ptr<Multipart> m;
-    m->reserve(m->parts_.size());
+    std::auto_ptr<Multipart> m(new Multipart());
+    m->reserve(parts_.size());
     m->parts_ = parts_; //copy pointers
     parts_.assign(parts_.size(), 0);
     return m.release();
