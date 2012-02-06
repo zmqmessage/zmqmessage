@@ -38,7 +38,7 @@ namespace ZmqMessage
    * Thrown when received multipart message consists of wrong number of parts.
    */
   ZMQMESSAGE_EXCEPTION_MACRO(MessageFormatError)
-  ;
+    ;
 
   /**
    * @class NoSuchPartError
@@ -53,7 +53,7 @@ namespace ZmqMessage
    */
   void
   send(zmq::socket_t& sock, Multipart& multipart, bool nonblock)
-    throw(ZmqErrorType);
+  throw(ZmqErrorType);
 
 
   // routing policies
@@ -96,7 +96,7 @@ namespace ZmqMessage
   protected:
     void
     receive_routing(zmq::socket_t& sock)
-      throw (MessageFormatError, ZmqErrorType);
+    throw (MessageFormatError, ZmqErrorType);
 
     inline
     MsgPtrVec*
@@ -131,7 +131,7 @@ namespace ZmqMessage
 
     friend void
     send(zmq::socket_t& sock, Multipart& multipart, bool nonblock)
-      throw(ZmqErrorType);
+    throw(ZmqErrorType);
 
   public:
     /**
@@ -150,14 +150,14 @@ namespace ZmqMessage
     private:
       explicit
       iterator(const MsgPtrVec& messages, bool binary_mode, bool end = false) :
-          messages_(messages), idx_(end ? messages.size() : 0),
-          binary_mode_(binary_mode)
+      messages_(messages), idx_(end ? messages.size() : 0),
+      binary_mode_(binary_mode)
       {
         set_cur();
       }
 
       iterator(const MsgPtrVec& messages, size_t idx, bool binary_mode) :
-          messages_(messages), idx_(idx), binary_mode_(binary_mode)
+        messages_(messages), idx_(idx), binary_mode_(binary_mode)
       {
         set_cur();
       }
@@ -228,10 +228,10 @@ namespace ZmqMessage
     }
 
     /**
-      * Detach heap-allocated Multipart message
-      * owning all the parts of this multipart.
-      * After this operation, current object owns no message parts.
-      */
+     * Detach heap-allocated Multipart message
+     * owning all the parts of this multipart.
+     * After this operation, current object owns no message parts.
+     */
     Multipart*
     detach();
 
@@ -419,7 +419,7 @@ namespace ZmqMessage
    */
   template <class RoutingPolicy>
   class Incoming :
-    public Multipart, private RoutingPolicy
+  public Multipart, private RoutingPolicy
   {
   private:
 
@@ -457,8 +457,8 @@ namespace ZmqMessage
     typedef RoutingPolicy RoutingPolicyType;
 
     explicit Incoming(zmq::socket_t& sock)
-        : src_(sock), is_terminal_(false),
-          cur_extract_idx_(0), binary_mode_(false)
+    : src_(sock), is_terminal_(false),
+      cur_extract_idx_(0), binary_mode_(false)
     {
     }
 
@@ -503,7 +503,7 @@ namespace ZmqMessage
     validate(
       const char* part_names[],
       size_t part_names_length, bool strict)
-      throw (MessageFormatError);
+    throw (MessageFormatError);
 
     /**
      * Receive definite number of message parts.
@@ -529,9 +529,9 @@ namespace ZmqMessage
     receive(
       std::tr1::array<const char*, N> part_names, bool check_terminal)
       throw (MessageFormatError)
-    {
+      {
       return receive(N, part_names.data(), check_terminal);
-    }
+      }
 
     /**
      * @overload
@@ -540,7 +540,7 @@ namespace ZmqMessage
     inline
     Incoming <RoutingPolicy>&
     receive(size_t parts, bool check_terminal)
-      throw (MessageFormatError, ZmqErrorType)
+    throw (MessageFormatError, ZmqErrorType)
     {
       return receive(parts, 0, 0, check_terminal);
     }
@@ -554,9 +554,9 @@ namespace ZmqMessage
     receive(
       size_t parts, const char* part_names[], bool check_terminal)
       throw (MessageFormatError, ZmqErrorType)
-    {
+      {
       return receive(parts, part_names, parts, check_terminal);
-    }
+      }
 
     /**
      * Receives ALL messages available on socket.
@@ -576,7 +576,7 @@ namespace ZmqMessage
     inline
     Incoming <RoutingPolicy>&
     receive_all(const size_t min_parts, const char* part_names[])
-      throw (MessageFormatError, ZmqErrorType)
+    throw (MessageFormatError, ZmqErrorType)
     {
       return receive_all(min_parts, part_names, min_parts);
     }
@@ -588,7 +588,7 @@ namespace ZmqMessage
     inline
     Incoming <RoutingPolicy>&
     receive_all()
-      throw (MessageFormatError, ZmqErrorType)
+    throw (MessageFormatError, ZmqErrorType)
     {
       return receive_all(0, 0, 0);
     }
@@ -600,7 +600,7 @@ namespace ZmqMessage
     inline
     Incoming <RoutingPolicy>&
     receive_all(const size_t min_parts)
-      throw (MessageFormatError, ZmqErrorType)
+    throw (MessageFormatError, ZmqErrorType)
     {
       return receive_all(min_parts, 0, 0);
     }
@@ -625,7 +625,7 @@ namespace ZmqMessage
      */
     int
     fetch_tail(std::vector<char>& area, const char* delimiter = 0)
-      throw (ZmqErrorType);
+    throw (ZmqErrorType);
 
     /**
      * Fetch all messages starting from tail message and drop them
@@ -726,8 +726,35 @@ namespace ZmqMessage
     unsigned options;
 
     inline OutOptions(zmq::socket_t& sock_p, unsigned options_p) :
-      sock(sock_p), options(options_p)
+        sock(sock_p), options(options_p)
     {}
+  };
+
+  /**
+   * Sink class may be parameterized with an object inherited from
+   * SendObserver. Observer will be notified of send events.
+   */
+  class SendObserver
+  {
+  public:
+    /**
+     * Next message part is about to be sent.
+     */
+    virtual
+    void
+    on_part(zmq::message_t& msg) = 0;
+
+    /**
+     * Sink has been flushed.
+     * @param send_successful If true, all parts are actually sent.
+     * If false, we couldn't send message, it's dropped.
+     */
+    virtual
+    void
+    on_flush(bool send_successful) = 0;
+
+  protected:
+    ~SendObserver() {}
   };
 
   /**
@@ -761,7 +788,7 @@ namespace ZmqMessage
       {
       public:
         AssignProxy(Sink& outgoing)
-            : outgoing_(outgoing)
+        : outgoing_(outgoing)
         {
         }
 
@@ -778,7 +805,7 @@ namespace ZmqMessage
     public:
       explicit
       iterator(Sink& outgoing)
-          : outgoing_(outgoing)
+      : outgoing_(outgoing)
       {
       }
 
@@ -855,11 +882,23 @@ namespace ZmqMessage
 
     State state_;
 
+    size_t pending_routing_parts_;
+
+    SendObserver* send_observer_;
+
   protected:
     Sink(zmq::socket_t& dst, unsigned options, Multipart* incoming = 0) :
       dst_(dst), options_(options), incoming_(incoming),
-      outgoing_queue_(0), cached_(0), state_(NOTSENT)
+      outgoing_queue_(0), cached_(0), state_(NOTSENT),
+      pending_routing_parts_(0), send_observer_(0)
     {}
+
+    inline
+    void
+    add_pending_routing_part()
+    {
+      ++pending_routing_parts_;
+    }
 
     inline
     unsigned
@@ -871,7 +910,7 @@ namespace ZmqMessage
     void
     send_one(
       zmq::message_t* msg, bool use_copy = false)
-      throw(ZmqErrorType);
+    throw(ZmqErrorType);
 
   private:
     void
@@ -892,155 +931,167 @@ namespace ZmqMessage
     virtual
     ~Sink();
 
-     /**
-      * Get pointer to incoming message this outgoing message is linked to.
-      * @return null if not linked.
-      */
-     const Multipart*
-     incoming() const
-     {
-       return incoming_;
-     }
+    /**
+     * Assign a pointer to SendObserver object.
+     * Note, that the object is not owned by Sink class
+     * and must be removed by client.
+     */
+    inline
+    void
+    set_send_observer(SendObserver* se)
+    {
+      send_observer_ = se;
+    }
 
-     /**
-      * Detach heap-allocated outgoing queue (Multipart message).
-      * This object's outgoing_queue_ is set to 0.
-      */
-     inline
-     Multipart*
-     detach()
-     {
-       return outgoing_queue_.release();
-     }
+    /**
+     * Get pointer to incoming message this outgoing message is linked to.
+     * @return null if not linked.
+     */
+    const Multipart*
+    incoming() const
+    {
+      return incoming_;
+    }
 
-     /**
-      * @return if we have enqueued message parts in outgoing queue.
-      */
-     inline
-     bool
-     is_queued() const
-     {
-       return (outgoing_queue_.get() != 0);
-     }
+    /**
+     * Detach heap-allocated outgoing queue (Multipart message).
+     * This object's outgoing_queue_ is set to 0.
+     */
+    inline
+    Multipart*
+    detach()
+    {
+      return outgoing_queue_.release();
+    }
 
-     /**
-      * Immediate send has failed (blocking)
-      * and we are dropping inserted messages
-      */
-     inline
-     bool
-     is_dropping() const
-     {
-       return (state_ == DROPPING);
-     }
+    /**
+     * @return if we have enqueued message parts in outgoing queue.
+     */
+    inline
+    bool
+    is_queued() const
+    {
+      return (outgoing_queue_.get() != 0);
+    }
 
-     /**
-      * @return destination socket
-      */
-     inline
-     zmq::socket_t&
-     dst()
-     {
-       return dst_;
-     }
+    /**
+     * Immediate send has failed (blocking)
+     * and we are dropping inserted messages
+     */
+    inline
+    bool
+    is_dropping() const
+    {
+      return (state_ == DROPPING);
+    }
 
-     /**
-      * Finally send or enqueue pending (cached) messages if any
-      */
-     void
-     flush() throw(ZmqErrorType);
+    /**
+     * @return destination socket
+     */
+    inline
+    zmq::socket_t&
+    dst()
+    {
+      return dst_;
+    }
 
-     void
-     set_binary()
-     {
-       options_ |= OutOptions::BINARY_MODE;
-     }
+    /**
+     * Finally send or enqueue pending (cached) messages if any
+     */
+    void
+    flush() throw(ZmqErrorType);
 
-     void
-     set_text()
-     {
-       options_ &= ~OutOptions::BINARY_MODE;
-     }
+    void
+    set_binary()
+    {
+      options_ |= OutOptions::BINARY_MODE;
+    }
 
-     /**
-      * Send all messages contained in @c incoming_ starting from idx_from
-      * ending idx_to - 1
-      */
-     void
-     send_incoming_messages(size_t idx_from = 0, size_t idx_to = UINT_MAX)
-       throw(ZmqErrorType);
+    void
+    set_text()
+    {
+      options_ &= ~OutOptions::BINARY_MODE;
+    }
 
-     /**
-      * Send all messages contained in given incoming starting from idx_from
-      * ending idx_to - 1
-      */
-     void
-     send_incoming_messages(Multipart& multipart,
-       bool copy, size_t idx_from = 0, size_t idx_to = UINT_MAX)
-       throw(ZmqErrorType);
+    /**
+     * Send all messages contained in @c incoming_ starting from idx_from
+     * ending idx_to - 1
+     */
+    void
+    send_incoming_messages(size_t idx_from = 0, size_t idx_to = UINT_MAX)
+    throw(ZmqErrorType);
 
-     /**
-      * Receive and send/enqueue pending messages from relay_src socket
-      */
-     void
-     relay_from(zmq::socket_t& relay_src) throw(ZmqErrorType);
+    /**
+     * Send all messages contained in given incoming starting from idx_from
+     * ending idx_to - 1
+     */
+    void
+    send_incoming_messages(Multipart& multipart,
+      bool copy, size_t idx_from = 0, size_t idx_to = UINT_MAX)
+    throw(ZmqErrorType);
 
-     /**
-      * Receive and send/enqueue pending messages from relay_src socket,
-      * counting sizes of received messages
-      * @tparam OccupationAccumulator unary functor accepting size_t
-      */
-     template <class OccupationAccumulator>
-     void
-     relay_from(
-       zmq::socket_t& relay_src, OccupationAccumulator acc)
-       throw (ZmqErrorType);
+    /**
+     * Receive and send/enqueue pending messages from relay_src socket
+     */
+    void
+    relay_from(zmq::socket_t& relay_src) throw(ZmqErrorType);
 
-     /**
-      * Lowest priority in overload. Uses @c ZmqMessage::init_msg functions
-      * to compose message part and send.
-      */
-     template <typename T>
-     Sink&
-     operator<< (const T& t) throw (ZmqErrorType);
+    /**
+     * Receive and send/enqueue pending messages from relay_src socket,
+     * counting sizes of received messages
+     * @tparam OccupationAccumulator unary functor accepting size_t
+     */
+    template <class OccupationAccumulator>
+    void
+    relay_from(
+      zmq::socket_t& relay_src, OccupationAccumulator acc)
+    throw (ZmqErrorType);
 
-     /**
-      * Note, we take ownership on message
-      * (unless message is part of incoming_ and COPY_INCOMING option is set).
-      * We invalidate incoming_'s ownership on this message
-      * (if COPY_INCOMING option is NOT set).
-      * Do not pass stack-allocated messages
-      * if this object is planned to be detached and used beyond current block.
-      */
-     Sink&
-     operator<< (zmq::message_t& msg) throw (ZmqErrorType);
+    /**
+     * Lowest priority in overload. Uses @c ZmqMessage::init_msg functions
+     * to compose message part and send.
+     */
+    template <typename T>
+    Sink&
+    operator<< (const T& t) throw (ZmqErrorType);
 
-     /**
-      * Either, we take ownership on message.
-      * Not checking if this message is part of incoming_.
-      * If ptr contains 0, null message is sent
-      */
-     inline Sink&
-     operator<< (MsgPtr msg) throw (ZmqErrorType)
-     {
-       send_owned(msg.get() ? msg.release() : new zmq::message_t(0));
-       return *this;
-     }
+    /**
+     * Note, we take ownership on message
+     * (unless message is part of incoming_ and COPY_INCOMING option is set).
+     * We invalidate incoming_'s ownership on this message
+     * (if COPY_INCOMING option is NOT set).
+     * Do not pass stack-allocated messages
+     * if this object is planned to be detached and used beyond current block.
+     */
+    Sink&
+    operator<< (zmq::message_t& msg) throw (ZmqErrorType);
 
-     /**
-      * Insert raw message (see @c RawMessage)
-      */
-     Sink&
-     operator<< (const RawMessage& m) throw (ZmqErrorType);
+    /**
+     * Either, we take ownership on message.
+     * Not checking if this message is part of incoming_.
+     * If ptr contains 0, null message is sent
+     */
+    inline Sink&
+    operator<< (MsgPtr msg) throw (ZmqErrorType)
+    {
+      send_owned(msg.get() ? msg.release() : new zmq::message_t(0));
+      return *this;
+    }
 
-     /**
-      * Handle a manipulator
-      */
-     inline Sink&
-     operator<< (Sink& (*f)(Sink&))
-     {
-       return f(*this);
-     }
+    /**
+     * Insert raw message (see @c RawMessage)
+     */
+    Sink&
+    operator<< (const RawMessage& m) throw (ZmqErrorType);
+
+    /**
+     * Handle a manipulator
+     */
+    inline Sink&
+    operator<< (Sink& (*f)(Sink&))
+    {
+      return f(*this);
+    }
   };
 
   /**
@@ -1084,7 +1135,7 @@ namespace ZmqMessage
     }
 
     explicit Outgoing(OutOptions out_opts) :
-      Sink(out_opts.sock, out_opts.options)
+        Sink(out_opts.sock, out_opts.options)
     {
       send_routing(0);
     }
@@ -1098,9 +1149,9 @@ namespace ZmqMessage
       Incoming<InRoutingPolicy>& incoming,
       unsigned options) throw(ZmqErrorType) :
       Sink(dst, options, &incoming)
-    {
+      {
       send_routing(incoming.get_routing());
-    }
+      }
 
     /**
      * Outgoing message is a response to the given Incoming message,
@@ -1110,9 +1161,9 @@ namespace ZmqMessage
     Outgoing(OutOptions out_opts,
       Incoming<InRoutingPolicy>& incoming) throw(ZmqErrorType) :
       Sink(out_opts.sock, out_opts.options, &incoming)
-    {
+      {
       send_routing(incoming.get_routing());
-    }
+      }
 
     /**
      * Outgoing message is NOT a response to the given Incoming message,
@@ -1121,7 +1172,7 @@ namespace ZmqMessage
     Outgoing(zmq::socket_t& dst,
       Multipart& incoming,
       unsigned options) throw(ZmqErrorType) :
-      Sink(dst, options, &incoming)
+        Sink(dst, options, &incoming)
     {
       send_routing(0);
     }
@@ -1132,7 +1183,7 @@ namespace ZmqMessage
      */
     Outgoing(OutOptions out_opts,
       Multipart& incoming) throw(ZmqErrorType) :
-      Sink(out_opts.sock, out_opts.options, &incoming)
+        Sink(out_opts.sock, out_opts.options, &incoming)
     {
       send_routing(0);
     }
