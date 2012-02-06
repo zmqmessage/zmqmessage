@@ -281,14 +281,16 @@ namespace ZmqMessage
   try_recv_msg(zmq::socket_t& sock, zmq::message_t& msg,
     int flags = ZMQ_NOBLOCK) throw(ZmqErrorType)
   {
+    bool res = false;
     try
     {
-      return sock.recv(&msg, flags);
+      res = sock.recv(&msg, flags);
     }
     catch (const zmq::error_t& e)
     {
       throw_zmq_exception(e);
     }
+    return res;
   }
 
   /**
