@@ -4,8 +4,6 @@
  *
  */
 
-//#define ZMQMESSAGE_CONFIGURATION_HEADER "zmqmessage/Config.hpp"
-
 #ifdef ZMQMESSAGE_CONFIGURATION_HEADER
 # include ZMQMESSAGE_CONFIGURATION_HEADER
 #endif

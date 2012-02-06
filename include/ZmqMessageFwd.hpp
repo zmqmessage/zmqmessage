@@ -19,6 +19,8 @@ namespace ZmqMessage
   template <class RoutingPolicy>
   class Incoming;
 
+  struct OutOptions;
+
   template <class RoutingPolicy>
   class Outgoing;
 
