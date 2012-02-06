@@ -10,6 +10,8 @@
 #ifndef ZMQMESSAGE_ZMQTOOLSFULLIMPL_HPP_
 #define ZMQMESSAGE_ZMQTOOLSFULLIMPL_HPP_
 
+#include <string>
+
 namespace
 {
   void
@@ -25,7 +27,9 @@ namespace ZmqMessage
   get_time(zmq::message_t& message)
   {
     errno = 0;
-    time_t tm = strtol(get_string(message).data(), 0, 10);
+    std::string str;
+    get(message, str);
+    time_t tm = strtol(str.data(), 0, 10);
     if (errno)
     {
       return time_t();
