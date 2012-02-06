@@ -1,5 +1,5 @@
 /**
- * @file zserialize.hpp
+ * @file zserialize.cpp
  * Pass data from one thread to another.
  */
 #include <pthread.h>

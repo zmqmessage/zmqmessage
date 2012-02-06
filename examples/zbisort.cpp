@@ -1,3 +1,8 @@
+/**
+ * @file zbisort.cpp
+ * Complex ZmqMessage example demonstrating Text and Binary modes, iterators,
+ * message relaying
+ */
 #include "pthread.h"
 #include <vector>
 
@@ -10,7 +15,8 @@
 /**
 \example zbisort.cpp
 
-This is a little more complex example.
+This is a little more complex example. Demonstrates Text and Binary modes,
+iterators, message relaying.
 
 Main thread starts a relay thread (@c relay(void*)).
 It in turn starts two sorting workers. One worker is sorting incoming messages as integers

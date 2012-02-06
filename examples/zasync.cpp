@@ -1,5 +1,5 @@
 /**
- * @file zasync.hpp
+ * @file zasync.cpp
  * Demonstrating ZmqMessage queueing functionality for delayed sending of messages
  * to implement asynchronous worker thread.
  * (Note that currently queueing has proven working only for PUSH-PULL sockets.)

@@ -523,6 +523,28 @@ int num = 9988;
 outgoing << ZmqMessage::Binary << num << ZmqMessage::Flush;
 \endcode
 
+Note, that Outgoing template class is derived from ZmqMessage::Sink class, and all the functionality for
+inserting and sending messages is encapsulated there. It's done that way
+because Outgoing depends on RoutingPolicy template parameter only
+on construction and implicit sending of routing message parts, so after creation,
+Outgoing may be referenced as non-template Sink (passed to functions, etc.):
+\code
+
+void send_parts(ZmqMessage::Sink& sink)
+{
+  sink << "some data" << 5678 << ZmqMessage::Flush;
+}
+
+int main()
+{
+  ZmqMessage::Outgoing<ZmqMessage::XRouting> outgoing(...);
+
+  send_parts(outgoing);
+
+  return 0;
+}
+\endcode
+
 Flushing Outgoing message sends final (terminal) message part (which was inserted before flushing),
 and no more insertions allowed after it.
 If you do not flush Outgoing message manually, it will flush in destructor.
