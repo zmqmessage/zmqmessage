@@ -72,9 +72,12 @@ worker(void*)
 
         ZmqMessage::Outgoing<ZmqMessage::SimpleRouting> egress(
           ZmqMessage::OutOptions(
-            s, ZmqMessage::OutOptions::CACHE_ON_BLOCK), ingress);
+            s,
+            ZmqMessage::OutOptions::CACHE_ON_BLOCK |
+             ZmqMessage::OutOptions::NONBLOCK),
+            ingress);
         
-        egress << "response" << ingress[1] << ZmqMessage::Flush();
+        egress << "response" << ingress[1] << ZmqMessage::Flush;
 
         if (egress.is_queued())
         {
@@ -113,12 +116,12 @@ main(int, char**)
     pthread_create(&worker_tid, 0, worker, 0);
 
     ZmqMessage::Outgoing<ZmqMessage::XRouting> to_worker0(s, 0);
-    to_worker0 << "request" << "#0" << ZmqMessage::Flush();
+    to_worker0 << "request" << "#0" << ZmqMessage::Flush;
     
     sleep(1);
     
     ZmqMessage::Outgoing<ZmqMessage::XRouting> to_worker1(s, 0);
-    to_worker1 << "request" << "#1" << ZmqMessage::Flush();
+    to_worker1 << "request" << "#1" << ZmqMessage::Flush;
     
     ZmqMessage::Outgoing<ZmqMessage::XRouting> to_worker2(s, 0);
     // to_worker2 << "request" << "#2" << ZmqMessage::Flush;
@@ -141,7 +144,7 @@ main(int, char**)
     std::cout << msg_type << msg_id << "received by main thread" << std::endl;
 
     ZmqMessage::Outgoing<ZmqMessage::SimpleRouting> to_stop(ss, 0);
-    to_stop << "stop" << ZmqMessage::Flush();
+    to_stop << "stop" << ZmqMessage::Flush;
   }
     catch(const std::exception& ex)
   {
