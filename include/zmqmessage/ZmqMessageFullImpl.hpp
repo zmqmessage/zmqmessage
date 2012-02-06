@@ -287,6 +287,7 @@ namespace ZmqMessage
   }
 
   template <>
+  ZMQMESSAGE_HEADERONLY_INLINE
   void
   Outgoing<SimpleRouting>::send_routing(
     MsgPtrVec* routing) throw (ZmqErrorType)
@@ -294,6 +295,7 @@ namespace ZmqMessage
   }
 
   template <>
+  ZMQMESSAGE_HEADERONLY_INLINE
   void
   Outgoing<XRouting>::send_routing(
     MsgPtrVec* routing) throw (ZmqErrorType)
