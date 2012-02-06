@@ -138,7 +138,7 @@ namespace ZmqMessage
   }
 
   template <class RoutingPolicy>
-  void
+  Incoming <RoutingPolicy>&
   Incoming<RoutingPolicy>::receive(
       size_t parts, const char* part_names[],
       size_t part_names_length, bool check_terminal)
@@ -181,10 +181,11 @@ namespace ZmqMessage
         is_terminal_ = true;
       }
     }
+    return *this;
   }
 
   template <class RoutingPolicy>
-  void
+  Incoming <RoutingPolicy>&
   Incoming<RoutingPolicy>::receive_all(
       size_t min_parts, const char* part_names[], size_t part_names_length)
       throw (MessageFormatError, ZmqErrorType)
@@ -195,10 +196,12 @@ namespace ZmqMessage
     {
       is_terminal_ = !receive_one();
     }
+
+    return *this;
   }
 
   template <class RoutingPolicy>
-  void
+  Incoming <RoutingPolicy>&
   Incoming<RoutingPolicy>::receive_up_to(
     size_t min_parts,
     const char* part_names[], size_t max_parts)
@@ -210,6 +213,8 @@ namespace ZmqMessage
     {
       is_terminal_ = !receive_one();
     }
+
+    return *this;
   }
 
   template <class RoutingPolicy>
