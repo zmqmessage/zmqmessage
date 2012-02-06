@@ -176,6 +176,14 @@ $ cmake -DZMQMESSAGE_CONFIGURATION_HEADER=/path/to/mydefs.hpp ..
 Note, that building shared library is not really necessary,
 as ZmqMessage library may be compiled in your binary.
 See \ref ref_linking_options "linking options" section in tutorial for details.
+
+If you want to generate offline documentation:
+\code
+$ make doc
+\endcode
+
+Documentation is generated at doc/html/index.html
+
  */
 
 /** \page zm_performance
