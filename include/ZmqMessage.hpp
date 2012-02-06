@@ -925,16 +925,20 @@ namespace ZmqMessage
 
      /**
       * Send all messages contained in @c incoming_ starting from idx_from
+      * ending idx_to - 1
       */
      void
-     send_incoming_messages(size_t idx_from = 0) throw(ZmqErrorType);
+     send_incoming_messages(size_t idx_from = 0, size_t idx_to = UINT_MAX)
+       throw(ZmqErrorType);
 
      /**
       * Send all messages contained in given incoming starting from idx_from
+      * ending idx_to - 1
       */
      void
      send_incoming_messages(Multipart& multipart,
-       bool copy, size_t idx_from = 0) throw(ZmqErrorType);
+       bool copy, size_t idx_from = 0, size_t idx_to = UINT_MAX)
+       throw(ZmqErrorType);
 
      /**
       * Receive and send/enqueue pending messages from relay_src socket
