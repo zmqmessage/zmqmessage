@@ -55,6 +55,9 @@ public:
   int flushed_successful;
   int flushed_failed;
 
+  CountingObserver() : sent(0), flushed_successful(0), flushed_failed(0)
+  {}
+
   virtual
   void
   on_part(zmq::message_t& msg)
@@ -93,12 +96,10 @@ void* req(void* arg)
   void* buf = ::malloc(payloadsz);
   memcpy(buf, payload, payloadsz);
 
-  CountingObserver obs;
+  CountingObserver* obs = new CountingObserver();
 
   ZmqMessage::Outgoing<Routing> outgoing(
-    s, ZmqMessage::OutOptions::NONBLOCK);
-
-  outgoing.set_send_observer(&obs);
+    ZmqMessage::OutOptions(s, ZmqMessage::OutOptions::NONBLOCK, obs));
 
   //request
   outgoing << part1 << SECOND_PART <<
@@ -109,9 +110,9 @@ void* req(void* arg)
 
   std::cout << "req: request sent" << std::endl;
 
-  assert(obs.flushed_successful == 1);
-  assert(obs.flushed_failed == 0);
-  assert(obs.sent == 5);
+  assert(obs->flushed_successful == 1);
+  assert(obs->flushed_failed == 0);
+  assert(obs->sent == 5);
 
   //response
   ZmqMessage::Incoming<Routing> incoming(s);

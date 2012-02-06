@@ -1,7 +1,7 @@
 /**
  * @file ZmqMessageFwd.hpp
  * @copyright Copyright (c) 2010-2011 Phorm, Inc.
- * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
+ * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html
  * @author Andrey Skryabin <andrew@zmqmessage.org>, et al.
  *
  * Forward declarations of ZmqMessage classes.
@@ -21,6 +21,8 @@ namespace ZmqMessage
 
   template <class RoutingPolicy>
   class Incoming;
+
+  class SendObserver;
 
   struct OutOptions;
 

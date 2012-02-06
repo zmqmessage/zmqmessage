@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <vector>
 #include <tr1/array>
+#include <tr1/memory>
 #include <string>
 #include <memory>
 #include <zmq.hpp>
@@ -686,10 +687,42 @@ namespace ZmqMessage
   };
 
   /**
+   * @brief Observer of outgoing message parts being sent.
+   *
+   * Sink class may be parameterized with an object inherited from
+   * SendObserver.
+   * Observer will be notified when message parts are being sent
+   * and when the entire Sink has been flushed.
+   */
+  class SendObserver
+  {
+  public:
+    /**
+     * Next message part (excluding routing parts) is about to be sent.
+     */
+    virtual
+    void
+    on_part(zmq::message_t& msg) = 0;
+
+    /**
+     * Sink has been flushed.
+     * @param send_successful If true, all parts are actually sent.
+     * If false, we couldn't send message, it's dropped.
+     */
+    virtual
+    void
+    on_flush(bool send_successful) = 0;
+
+    virtual
+    ~SendObserver() {}
+  };
+
+  /**
    * @brief Options for outgoing message
    *
    * This struct holds both reference to socket and options.
-   * Needed for convenient creation of @c Outgoing class.
+   * Also it can hold SendObserver pointer to be set to Outgoing object.
+   * Needed for convenient creation of @c Outgoing object.
    */
   struct OutOptions
   {
@@ -725,36 +758,25 @@ namespace ZmqMessage
     zmq::socket_t& sock;
     unsigned options;
 
-    inline OutOptions(zmq::socket_t& sock_p, unsigned options_p) :
-        sock(sock_p), options(options_p)
+    typedef std::tr1::shared_ptr<SendObserver> SendObserverPtr;
+
+    SendObserverPtr send_observer;
+
+    /**
+     * Create OutOptions.
+     * Note, that OutOptions takes ownership on SendObserver, if given.
+     */
+    inline
+    OutOptions(
+      zmq::socket_t& sock_p, unsigned options_p, SendObserver* so = 0) :
+      sock(sock_p), options(options_p), send_observer(so)
     {}
-  };
 
-  /**
-   * Sink class may be parameterized with an object inherited from
-   * SendObserver. Observer will be notified of send events.
-   */
-  class SendObserver
-  {
-  public:
-    /**
-     * Next message part is about to be sent.
-     */
-    virtual
-    void
-    on_part(zmq::message_t& msg) = 0;
-
-    /**
-     * Sink has been flushed.
-     * @param send_successful If true, all parts are actually sent.
-     * If false, we couldn't send message, it's dropped.
-     */
-    virtual
-    void
-    on_flush(bool send_successful) = 0;
-
-  protected:
-    ~SendObserver() {}
+    inline
+    OutOptions(
+      zmq::socket_t& sock_p, unsigned options_p, SendObserverPtr so) :
+      sock(sock_p), options(options_p), send_observer(so)
+    {}
   };
 
   /**
@@ -856,6 +878,8 @@ namespace ZmqMessage
 
     unsigned options_;
 
+    OutOptions::SendObserverPtr send_observer_;
+
     /**
      * If not null, the routing will be taken from it.
      * Either, when sending/inserting zmq messages to Outgoing,
@@ -884,13 +908,19 @@ namespace ZmqMessage
 
     size_t pending_routing_parts_;
 
-    SendObserver* send_observer_;
-
   protected:
-    Sink(zmq::socket_t& dst, unsigned options, Multipart* incoming = 0) :
-      dst_(dst), options_(options), incoming_(incoming),
+    Sink(zmq::socket_t& dst, unsigned options,
+      OutOptions::SendObserverPtr& so, Multipart* incoming = 0) :
+      dst_(dst), options_(options), send_observer_(so), incoming_(incoming),
       outgoing_queue_(0), cached_(0), state_(NOTSENT),
-      pending_routing_parts_(0), send_observer_(0)
+      pending_routing_parts_(0)
+    {}
+
+    Sink(zmq::socket_t& dst, unsigned options,
+      SendObserver* so = 0, Multipart* incoming = 0) :
+      dst_(dst), options_(options), send_observer_(so), incoming_(incoming),
+      outgoing_queue_(0), cached_(0), state_(NOTSENT),
+      pending_routing_parts_(0)
     {}
 
     inline
@@ -910,7 +940,7 @@ namespace ZmqMessage
     void
     send_one(
       zmq::message_t* msg, bool use_copy = false)
-    throw(ZmqErrorType);
+      throw(ZmqErrorType);
 
   private:
     void
@@ -933,14 +963,13 @@ namespace ZmqMessage
 
     /**
      * Assign a pointer to SendObserver object.
-     * Note, that the object is not owned by Sink class
-     * and must be removed by client.
+     * Note, that the ownership on the given object is taken by Sink object.
      */
     inline
     void
     set_send_observer(SendObserver* se)
     {
-      send_observer_ = se;
+      send_observer_.reset(se);
     }
 
     /**
@@ -1134,8 +1163,9 @@ namespace ZmqMessage
       send_routing(0);
     }
 
-    explicit Outgoing(OutOptions out_opts) :
-        Sink(out_opts.sock, out_opts.options)
+    explicit
+    Outgoing(OutOptions out_opts) :
+      Sink(out_opts.sock, out_opts.options, out_opts.send_observer)
     {
       send_routing(0);
     }
@@ -1148,10 +1178,10 @@ namespace ZmqMessage
     Outgoing(zmq::socket_t& dst,
       Incoming<InRoutingPolicy>& incoming,
       unsigned options) throw(ZmqErrorType) :
-      Sink(dst, options, &incoming)
-      {
+      Sink(dst, options, 0, &incoming)
+    {
       send_routing(incoming.get_routing());
-      }
+    }
 
     /**
      * Outgoing message is a response to the given Incoming message,
@@ -1160,19 +1190,18 @@ namespace ZmqMessage
     template <typename InRoutingPolicy>
     Outgoing(OutOptions out_opts,
       Incoming<InRoutingPolicy>& incoming) throw(ZmqErrorType) :
-      Sink(out_opts.sock, out_opts.options, &incoming)
-      {
+      Sink(out_opts.sock, out_opts.options, out_opts.send_observer, &incoming)
+    {
       send_routing(incoming.get_routing());
-      }
+    }
 
     /**
      * Outgoing message is NOT a response to the given Incoming message,
      * so we send normal routing.
      */
-    Outgoing(zmq::socket_t& dst,
-      Multipart& incoming,
+    Outgoing(zmq::socket_t& dst, Multipart& incoming,
       unsigned options) throw(ZmqErrorType) :
-        Sink(dst, options, &incoming)
+      Sink(dst, options, 0, &incoming)
     {
       send_routing(0);
     }
@@ -1181,9 +1210,8 @@ namespace ZmqMessage
      * Outgoing message is NOT a response to the given Incoming message,
      * so we send normal routing.
      */
-    Outgoing(OutOptions out_opts,
-      Multipart& incoming) throw(ZmqErrorType) :
-        Sink(out_opts.sock, out_opts.options, &incoming)
+    Outgoing(OutOptions out_opts, Multipart& incoming) throw(ZmqErrorType) :
+      Sink(out_opts.sock, out_opts.options, out_opts.send_observer, &incoming)
     {
       send_routing(0);
     }
