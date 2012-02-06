@@ -312,6 +312,7 @@ namespace ZmqMessage
   template <class RoutingPolicy>
   Outgoing<RoutingPolicy>&
   Outgoing<RoutingPolicy>::operator<< (zmq::message_t& msg)
+    throw (ZmqErrorType)
   {
     bool copy_mode = options_ & OutOptions::COPY_INCOMING;
     bool use_copy = false;
@@ -335,6 +336,7 @@ namespace ZmqMessage
   template <class RoutingPolicy>
   Outgoing<RoutingPolicy>&
   Outgoing<RoutingPolicy>::operator<< (const RawMessage& m)
+    throw (ZmqErrorType)
   {
     if (m.deleter)
     {

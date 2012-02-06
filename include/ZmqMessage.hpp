@@ -972,7 +972,7 @@ namespace ZmqMessage
      */
     template <typename T>
     Outgoing<RoutingPolicy>&
-    operator<< (const T& t);
+    operator<< (const T& t) throw (ZmqErrorType);
 
     /**
      * Note, we take ownership on message
@@ -983,7 +983,7 @@ namespace ZmqMessage
      * if this object is planned to be detached and used beyond current block.
      */
     Outgoing<RoutingPolicy>&
-    operator<< (zmq::message_t& msg);
+    operator<< (zmq::message_t& msg) throw (ZmqErrorType);
 
     /**
      * Either, we take ownership on message.
@@ -991,7 +991,7 @@ namespace ZmqMessage
      * If ptr contains 0, null message is sent
      */
     inline Outgoing<RoutingPolicy>&
-    operator<< (MsgPtr msg)
+    operator<< (MsgPtr msg) throw (ZmqErrorType)
     {
       send_owned(msg.get() ? msg.release() : new zmq::message_t(0));
       return *this;
@@ -1001,7 +1001,7 @@ namespace ZmqMessage
      * Insert raw message (see @c RawMessage)
      */
     Outgoing<RoutingPolicy>&
-    operator<< (const RawMessage& m);
+    operator<< (const RawMessage& m) throw (ZmqErrorType);
 
     /**
      * Handle a manipulator

@@ -59,7 +59,7 @@ namespace ZmqMessage
   template <class RoutingPolicy>
   template <typename T>
   Outgoing<RoutingPolicy>&
-  Outgoing<RoutingPolicy>::operator<< (const T& t)
+  Outgoing<RoutingPolicy>::operator<< (const T& t) throw (ZmqErrorType)
   {
     MsgPtr msg(new zmq::message_t);
     if (options_ & OutOptions::BINARY_MODE)
