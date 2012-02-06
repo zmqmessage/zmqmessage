@@ -596,8 +596,7 @@ namespace ZmqMessage
     /**
      * Fetch all messages starting from tail message and drop them
      * until there will be no more parts on socket.
-     * We assume that we have used THIS socket on receive() call.
-     * @return number of messages in result (min 1)
+     * @return number of messages dropped (min 0)
      */
     int
     drop_tail() throw(ZmqErrorType);
