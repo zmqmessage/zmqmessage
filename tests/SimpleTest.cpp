@@ -79,9 +79,10 @@ void* req(void* arg)
   assert(status == STATUS);
 
   //inserter
-  id.clear(); status.clear();
+  status.clear();
 
-  incoming >> id >> status;
+  incoming >> ZmqMessage::Skip //id
+    >> status;
   assert(status == STATUS);
 
   try
