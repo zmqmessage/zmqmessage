@@ -6,6 +6,12 @@
 
 #include "ZmqMessage.hpp"
 
+/**
+\example zqueue.cpp
+
+Currently not working, needs ZMQ fix
+*/
+
 //0mq context is globally available
 zmq::context_t ctx(1);
 
@@ -28,7 +34,7 @@ worker(void*)
   {
     zmq::socket_t s(ctx, ZMQ_REP);
     s.setsockopt(ZMQ_HWM, &one_message_queue, sizeof(uint64_t));
-    
+
     s.connect(endpoint);
     // socket to receive data from main thread and to send result back
     //   is connected
@@ -43,7 +49,7 @@ worker(void*)
 
     item[0].socket = ss;
     item[0].events = ZMQ_POLLIN;
-    
+
     item[1].socket = s;
     item[1].events = ZMQ_POLLIN | ZMQ_POLLOUT;
 
@@ -52,7 +58,7 @@ worker(void*)
     for(;;)
     {
       zmq::poll(item, sizeof(item) / sizeof(item[0]), 0);
-      
+
       if (item[0].revents) // stop
       {
         std::cout << "stop" << std::endl;
@@ -76,7 +82,7 @@ worker(void*)
             ZmqMessage::OutOptions::CACHE_ON_BLOCK |
              ZmqMessage::OutOptions::NONBLOCK),
             ingress);
-        
+
         egress << "response" << ingress[1] << ZmqMessage::Flush;
 
         if (egress.is_queued())
@@ -117,29 +123,29 @@ main(int, char**)
 
     ZmqMessage::Outgoing<ZmqMessage::XRouting> to_worker0(s, 0);
     to_worker0 << "request" << "#0" << ZmqMessage::Flush;
-    
+
     sleep(1);
-    
+
     ZmqMessage::Outgoing<ZmqMessage::XRouting> to_worker1(s, 0);
     to_worker1 << "request" << "#1" << ZmqMessage::Flush;
-    
+
     ZmqMessage::Outgoing<ZmqMessage::XRouting> to_worker2(s, 0);
     // to_worker2 << "request" << "#2" << ZmqMessage::Flush;
 
     sleep(1);
-    
+
     std::string msg_type;
     std::string msg_id;
-    
+
     ZmqMessage::Incoming<ZmqMessage::XRouting> from_worker0(s);
     from_worker0.receive(2, from_worker_fields, 2, true);
-    
+
     from_worker0 >> msg_type >> msg_id;
     std::cout << msg_type << msg_id << "received by main thread" << std::endl;
-    
+
     ZmqMessage::Incoming<ZmqMessage::XRouting> from_worker1(s);
     from_worker1.receive(2, from_worker_fields, 2, true);
-    
+
     from_worker1 >> msg_type >> msg_id;
     std::cout << msg_type << msg_id << "received by main thread" << std::endl;
 
@@ -156,8 +162,8 @@ main(int, char**)
   // thread is completed and sockets are closed
 }
 
-  
-      
-      
-      
+
+
+
+
 
