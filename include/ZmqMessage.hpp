@@ -460,7 +460,17 @@ namespace ZmqMessage
      * accessible on socket (all parts are received).
      */
     inline bool
-    is_terminal() const { return is_terminal_; }
+    is_terminal() const
+    {
+      return is_terminal_;
+    }
+
+    /**
+     * If received message is not already terminal (has no pending parts),
+     * throws MessageFormatError exception.
+     */
+    void
+    check_is_terminal() const throw(MessageFormatError);
 
     /**
      * Receive definite number of message parts.
