@@ -39,6 +39,16 @@ namespace ZmqMessage
     parts_.clear();
   }
 
+  Multipart*
+  Multipart::detach()
+  {
+    std::auto_ptr<Multipart> m;
+    m->reserve(m->parts_.size());
+    m->parts_ = parts_; //copy pointers
+    parts_.assign(parts_.size(), 0);
+    return m.release();
+  }
+
   void
   Multipart::check_has_part(size_t n) const throw(NoSuchPartError)
   {
@@ -168,6 +178,34 @@ namespace ZmqMessage
         std::min(cur_part.size(), static_cast<size_t>(256)))
       << ", has more = " << more << ZMQMESSAGE_LOG_TERM;
     return more;
+  }
+
+  template <class RoutingPolicy>
+  void
+  Incoming<RoutingPolicy>::validate(
+    const char* part_names[],
+    size_t part_names_length, bool strict)
+    throw (MessageFormatError)
+  {
+    if (parts_.size() < part_names_length)
+    {
+      std::ostringstream ss;
+      ss <<
+        "Validating received multipart: "
+        "No more messages after " << part_names[parts_.size() - 1] <<
+        "(" << (parts_.size()) << "), expected " <<
+        (strict ? "exactly" : "at least") << " " << part_names_length;
+      throw MessageFormatError(ss.str());
+    }
+    if (strict && parts_.size() > part_names_length)
+    {
+      std::ostringstream ss;
+      ss <<
+        "Validating received multipart: "
+        "Have received " << parts_.size() << " parts, while expected "
+        "exactly " << part_names_length;
+      throw MessageFormatError(ss.str());
+    }
   }
 
   template <class RoutingPolicy>
