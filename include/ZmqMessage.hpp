@@ -875,6 +875,10 @@ namespace ZmqMessage
       send_routing(0);
     }
 
+    /**
+     * Outgoing message is a response to the given Incoming message,
+     * so we resend Incoming's routing first.
+     */
     template <typename InRoutingPolicy>
     Outgoing(zmq::socket_t& dst,
       Incoming<InRoutingPolicy>& incoming,
@@ -885,6 +889,10 @@ namespace ZmqMessage
       send_routing(incoming.get_routing());
     }
 
+    /**
+     * Outgoing message is a response to the given Incoming message,
+     * so we resend Incoming's routing first.
+     */
     template <typename InRoutingPolicy>
     Outgoing(OutOptions out_opts,
       Incoming<InRoutingPolicy>& incoming) throw(ZmqErrorType) :
@@ -892,6 +900,31 @@ namespace ZmqMessage
       outgoing_queue_(0), cached_(0), state_(NOTSENT)
     {
       send_routing(incoming.get_routing());
+    }
+
+    /**
+     * Outgoing message is NOT a response to the given Incoming message,
+     * so we send normal routing.
+     */
+    Outgoing(zmq::socket_t& dst,
+      Multipart& incoming,
+      unsigned options) throw(ZmqErrorType):
+      dst_(dst), options_(options), incoming_(&incoming),
+      outgoing_queue_(0), cached_(0), state_(NOTSENT)
+    {
+      send_routing(0);
+    }
+
+    /**
+     * Outgoing message is NOT a response to the given Incoming message,
+     * so we send normal routing.
+     */
+    Outgoing(OutOptions out_opts,
+      Multipart& incoming) throw(ZmqErrorType) :
+      dst_(out_opts.sock), options_(out_opts.options), incoming_(&incoming),
+      outgoing_queue_(0), cached_(0), state_(NOTSENT)
+    {
+      send_routing(0);
     }
 
     ~Outgoing();
