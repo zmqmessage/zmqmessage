@@ -1,7 +1,7 @@
 /**
  * @file ZmqMessageFullImpl.hpp
  * @copyright Copyright (c) 2010-2011 Phorm, Inc.
- * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
+ * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html
  * @author Andrey Skryabin <andrew@zmqmessage.org>, et al.
  *
  * Full definition of all ZmqMessage objects methods.
@@ -595,20 +595,26 @@ namespace ZmqMessage
   }
 
   void
-  Sink::send_incoming_messages(size_t idx_from)
-    throw(ZmqErrorType)
+  Sink::send_incoming_messages(size_t idx_from) throw(ZmqErrorType)
   {
     if (!incoming_)
     {
       return;
     }
     bool copy = options_ & OutOptions::COPY_INCOMING;
-    for (size_t i = idx_from; i < incoming_->parts_.size(); ++i)
+    send_incoming_messages(*incoming_, copy, idx_from);
+  }
+
+  void
+  Sink::send_incoming_messages(Multipart& multipart,
+    bool copy, size_t idx_from) throw(ZmqErrorType)
+  {
+    for (size_t i = idx_from; i < multipart.parts_.size(); ++i)
     {
-      zmq::message_t* msg = incoming_->parts_[i];
+      zmq::message_t* msg = multipart.parts_[i];
       if (!copy)
       {
-        incoming_->parts_[i] = 0;
+        multipart.parts_[i] = 0;
       }
       send_one(msg, copy);
     }
