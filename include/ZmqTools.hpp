@@ -1,7 +1,7 @@
 /**
  * @file ZmqTools.hpp
  * @copyright Copyright (c) 2010-2011 Phorm, Inc.
- * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
+ * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html
  * @author Andrey Skryabin <andrew@zmqmessage.org>, et al.
  */
 
@@ -233,6 +233,18 @@ namespace ZmqMessage
    */
   time_t
   get_time(zmq::message_t& message);
+
+  /**
+   * Compare message contents to specified memory region.
+   * @return like @c memcmp
+   */
+  inline int
+  msgcmp(zmq::message_t& message1, zmq::message_t& message2)
+  {
+    int ret = memcmp(message1.data(), message2.data(),
+      std::min(message1.size(), message2.size()));
+    return ret ? ret : message1.size() - message2.size();
+  }
 
   /**
    * Compare message contents to specified memory region.
