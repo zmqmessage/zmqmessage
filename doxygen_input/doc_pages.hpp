@@ -30,7 +30,7 @@ due to routing policies.</li>
   <li>\ref zm_build "Build instructions"</li>
   <li>\ref zm_performance "Performance notes"</li>
   <li><a class="el" href="https://github.com/zmqmessage/zmqmessage/">GitHub project download page</a></li>
-</dl>
+</ul>
 </div>
  */
 
