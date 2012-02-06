@@ -46,10 +46,9 @@ namespace ZmqMessage
     return *this;
   }
 
-  template <class RoutingPolicy>
   template <typename T>
-  Outgoing<RoutingPolicy>&
-  Outgoing<RoutingPolicy>::operator<< (const T& t) throw (ZmqErrorType)
+  Sink&
+  Sink::operator<< (const T& t) throw (ZmqErrorType)
   {
     MsgPtr msg(new zmq::message_t);
     bool binary_mode = options_ & OutOptions::BINARY_MODE;
@@ -58,10 +57,9 @@ namespace ZmqMessage
     return *this;
   }
 
-  template <class RoutingPolicy>
   template <class OccupationAccumulator>
   void
-  Outgoing<RoutingPolicy>::relay_from(
+  Sink::relay_from(
     zmq::socket_t& relay_src, OccupationAccumulator acc)
     throw (ZmqErrorType)
   {
