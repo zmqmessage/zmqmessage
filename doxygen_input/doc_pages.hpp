@@ -1,0 +1,274 @@
+/** \mainpage ZmqMessage C++ Library
+Sending and receiving <a href="http://www.zeromq.org">ZeroMQ</a> multipart messages.
+
+<h3>Main features:</h3>
+<ul>
+<li>Transparent interoperability between "simple" and "X" ZMQ endpoint types
+due to routing policies.</li>
+<li>Checking for multipart message consistency when receiving
+(if number of parts to be received is known in advance)
+<li>Configurable to use application-specific logging and exception policies</li>
+<li>Possibility to use user-supplied string-like class to avoid copying</li>
+<li>Supporting iterators, insert (<<) operator for outgoing and extract (>>) operator for incoming</li>
+<li>Text (default) and binary \ref zm_modes "modes" for extraction/insertion/iteration of parts</li>
+</ul>
+
+<div class="zm_toc">
+<h3>Table of contents</h3>
+<ul>
+  <li>\ref zm_tutorial "Tutorial"</li>
+  <li>Reference</li>
+    <dd>
+    - Class ZmqMessage::Incoming for receiving incoming messages
+    - Class ZmqMessage::Outgoing for sending outgoing messages
+    - \ref ZmqMessage "All ZmqMessage namespace members",
+    including functions for convenient working with message parts \n
+    </dd>
+  </li>
+  <li><a class="el" href="examples.html">Examples</a></li>
+  <li>\ref zm_links "Links"</li>
+  <li>\ref zm_tests "Test Suite"</li>
+</dl>
+</div>
+ */
+
+/** \page zm_modes
+<h2>Word on Text and Binary modes</h2>
+<hr>
+Text and Binary modes determine how raw ZMQ message content is converted into user type,
+when message content is extracted from Incoming, inserted into Outgoing,
+or we iterate over incoming multipart message.
+
+<b>Binary:</b> message content pointer is interpreted as pointer to user type,
+and assign operator is invoked. This mode is suitable for implementing binary protocols.
+
+<b>Text:</b> message content is interpreted as char array.
+For string types (see \ref ZMQMESSAGE_STRING_CLASS on string concept definition)
+we initialize object from char array, for other types we put (>>) chars into @c stringstream
+and read stream into instance of type.
+
+<h3>How to set:</h3>
+<ul>
+<li>For Incoming:
+Use Text and Binary manipulators to switch stream to/from binary mode. Default mode is text.
+\code
+//read text command and binary integer as value.
+std::string command;
+int value;
+incoming >> ZmqMessage::Text() >> command << ZmqMessage::Binary() << value;
+\endcode
+</li>
+<li>For iteration over incoming:
+Call Incoming::begin() method:
+\code
+std::ostream_iterator<int> out_it(std::cout, ", ");
+
+//print messages with binary integers.
+std::copy(
+  incoming.begin<int>(true), incoming.end<int>(), out_it);
+\endcode
+</li>
+<li>For insertion into outgoing:
+You may initialize Outgoing with OutOptions::BINARY_MODE to initially set binary mode,
+otherwise text mode is set.
+\code
+ZmqMessage::Outgoing<ZmqMessage::XRouting> outgoing(
+  sock, ZmqMessage::OutOptions::NONBLOCK | ZmqMessage::OutOptions::BINARY_MODE);
+
+//then use Text and Binary manipulators:
+long id = 1;
+
+outgoing << id //insert binary
+  << ZmqMessage::Text() //switch to text
+  << "SET_VALUE"
+  << ZmqMessage::Binary() << 999; //again binary
+
+\endcode
+</li>
+</ul>
+ */
+
+/** \page zm_tutorial
+
+<h2>Tutorial</h2>
+<div class="zm_toc">
+<ul>
+  <li>\ref ref_configuring "Configuring library to integarte smoothly into your application"</li>
+  <li>\ref ref_receiving "Receiving messages"</li>
+  <li>\ref ref_sending "Sending messages"</li>
+</ul>
+</div>
+
+<hr>
+
+\anchor ref_configuring
+<h3>Configuring library</h3>
+To integrate the library into your application you can (and encouraged to)
+define a few macro constants before including library headers
+(ZmqMessage.hpp and ZmqTools.hpp) anywhere in your application.
+Though none of these definitions are mandatory.
+
+These constants are:
+
+<ul>
+<li>
+\code
+ZMQMESSAGE_STRING_CLASS
+\endcode
+@copydoc ZMQMESSAGE_STRING_CLASS
+</li>
+
+<li>
+\code
+ZMQMESSAGE_LOG_STREAM
+\endcode
+@copydoc ZMQMESSAGE_LOG_STREAM
+</li>
+
+<li>
+\code
+ZMQMESSAGE_LOG_TERM
+\endcode
+@copydoc ZMQMESSAGE_LOG_TERM
+</li>
+
+<li>
+\code
+ZMQMESSAGE_EXCEPTION_MACRO
+\endcode
+@copydoc ZMQMESSAGE_EXCEPTION_MACRO
+</li>
+
+<li>
+\code
+ZMQMESSAGE_WRAP_ZMQ_ERROR
+\endcode
+@copydoc ZMQMESSAGE_WRAP_ZMQ_ERROR
+</li>
+
+</ul>
+
+\anchor ref_receiving
+<h3>Receiving messages</h3>
+To receive multipart message, you create instance of ZmqMessage::Incoming.
+For XREQ and XREP socket types use \ref ZmqMessage::XRouting as template parameter,
+for other socket types use \ref ZmqMessage::SimpleRouting.
+
+\code
+
+zmq::context_t ctx(1);
+zmq::socket sock(ctx, ZMQ_PULL); //will use SimpleRouting
+sock.connect("inproc://some-endpoint");
+
+ZmqMessage::Incoming<ZmqMessage::SimpleRouting> incoming(sock);
+
+//say, we know what message parts we receive. Here are their names:
+const char* req_parts[] = {"id", "name", "blob"};
+
+//true because it's a terminal message, no more parts allowed at end
+incoming.receive(3, req_parts, true);
+
+//Get 2nd part explicitly (assume ZMQMESSAGE_STRING_CLASS is std::string):
+std::string name = ZmqMessage::get_string(incoming[1]);
+//or more verbose:
+std::string name_cpy = ZmqMessage::get<std::string>(incoming[1]);
+
+//if we also have some MyString class:
+MyString my_id = ZmqMessage::get<MyString>(incoming[0]);
+
+//or we can extract data as variables or plain zmq messages.
+zmq::message_t blob;
+incoming >> my_id >> name >> blob;
+
+//or we can iterate on message parts and use standard algorithms:
+std::ostream_iterator<MyString> out_it(std::cout, ", ");
+std::copy(
+  incoming.begin<MyString>(), incoming.end<MyString>(), out_it);
+
+\endcode
+
+Of course, passing message part names is not necessary (see \ref ZmqMessage::Incoming::receive "receive" functions).
+
+There are cases when implemented protocol implies a fixed number of message parts at the beginning of multipart message.
+And the number of subsequent messages is either undefined or estimated based on contents of first parts
+(i.e. first part may contain command name, and other parts may contain data dependent on command).
+So you first may call \ref ZmqMessage::Incoming::receive "receive" function with @c false as last parameter
+(not checking if message is terminal), do something with first parts,
+and then call \ref ZmqMessage::Incoming::receive "receive" or
+\ref ZmqMessage::Incoming::receive_all "receive_all" again to fetch the rest.
+
+\code
+const char* req_parts[] = {"command"};
+incoming.receive(1, req_parts, false);
+
+std::string cmd = ZmqMessage::get_string(incoming[0]);
+
+if (cmd == "SET_PARAM")
+{
+  const char* tail_parts[] = {"parameter 1 value (text)", "parameter 2 value (binary)"};
+  incoming.receive(2, tail_parts, true);
+
+  //message with parameter 1 contains text data converted into unsigned 32 bit integer (ex. "678" -> 678)
+  uint32_t param1 = ZmqMessage::get<uint32_t>(incoming[1]);
+
+  //message with parameter 2 contains binary data (unsigned 32 bit integer)
+  uint32_t param2 = ZmqMessage::get_bin<uint32_t>(incoming[2]);
+
+  //...
+}
+else
+{
+  //otherwise we receive all remaining message parts
+  incoming.receive_all();
+
+  if (incoming.size() > 1)
+  {
+    zmq::message_t& first = incoming[1];
+    //...
+  }
+}
+
+\endcode
+
+\anchor ref_sending
+<h3>Sending messages</h3>
+
+To send a multipart message, you create instance of ZmqMessage::Outgoing.
+For sending to XREQ and XREP socket types use \ref ZmqMessage::XRouting as template parameter,
+for other socket types use \ref ZmqMessage::SimpleRouting.
+
+\code
+
+zmq::context_t ctx(1);
+zmq::socket sock(ctx, ZMQ_XREQ); //will use XRouting
+sock.connect("inproc://some-endpoint");
+
+//create Outgoing specifying sending options: use nonblocking send
+//and drop messages if operation would block
+ZmqMessage::Outgoing<ZmqMessage::XRouting> outgoing(
+  sock, ZmqMessage::OutOptions::NONBLOCK | ZmqMessage::OutOptions::DROP_ON_BLOCK);
+
+//suppose we have some MyString class:
+MyString id("112233");
+
+outgoing << id << "SET_VARIABLES";
+
+//Number will be converted to string (written to stream), cause Outgoing is in Text \ref zm_modes "mode".
+outgoing << 567099;
+
+char buffer[128];
+::memset (buffer, 'z', 128); //fill buffer
+
+outgoing << ZmqMessage::RawMessage(buffer, 128);
+
+//send message with binary number and flush it;
+int num = 9988;
+outgoing << ZmqMessage::Binary() << num << ZmqMessage::Flush();
+\endcode
+
+Flushing Outgoing message sends final (terminal) message part (which was inserted before flushing),
+and no more insertions allowed after it.
+If you do not flush Outgoing message manually, it will flush in destructor.
+
+*/
+
