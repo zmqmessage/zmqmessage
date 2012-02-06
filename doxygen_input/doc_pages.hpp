@@ -7,11 +7,17 @@ Sending and receiving <a href="http://www.zeromq.org">ZeroMQ</a> \ref zm_multipa
 due to routing policies</li>
 <li>Checking for multipart message consistency when receiving
 (if number of parts to be received is known in advance)
-<li>Configurable to use application-specific logging and exception policies</li>
+<li>Using library as haeder-only (more configurable) or linking with shared library
+(see \ref ref_configuring "configuring" for details)</li>
+<li>Configurable to use application-specific logging and exception policies
+(in header-only builds or with rebuilding shared library)
+</li>
 <li>Possibility to use user-supplied string-like classes to avoid copying</li>
-<li>Supporting iterators, insert (<<) operator for outgoing messages and extract (>>) operator for incoming messages</li>
+<li>Supporting iterators, insert (<<) operator for outgoing messages and
+extract (>>) operator for incoming messages</li>
 <li>Text (default) and binary \ref zm_modes "modes" for extraction/insertion/iteration of parts</li>
-<li>Possibility for \ref zm_queueing "queueing messages" for delayed sending if either blocking or dropping is unacceptable</li>
+<li>Possibility for \ref zm_queueing "queueing messages" for delayed sending if
+either blocking or dropping is unacceptable</li>
 </ul>
 
 <div class="zm_toc">
@@ -113,7 +119,8 @@ prevent congestion due to internal socket states.
 /** \page zm_build
 <h2>Build instructions</h2>
 
-After you have downloaded an archive or cloned a git repository, build the library.
+After you have downloaded an archive or cloned a git repository, you may
+build the shared library, examples and tests.
 
 <h3>Build Requirements</h3>
 <ul>
@@ -145,6 +152,10 @@ $ make install
 \endcode
 
 That's all.
+
+Note, that building shared library is not really necessary,
+as ZmqMessage library may be used as header-only.
+See \ref ref_configuring "configuring" section in tutorial for details.
  */
 
 /** \page zm_performance
@@ -270,12 +281,28 @@ See example zserialize.cpp for details.
 <h3>Configuring library</h3>
 To integrate the library into your application you can (and encouraged to)
 define a few macro constants before including library headers
-(ZmqMessage.hpp and ZmqTools.hpp) anywhere in your application.
+(ZmqMessageFwd.hpp, ZmqMessage.hpp and ZmqTools.hpp) anywhere in your application.
 Though none of these definitions are mandatory.
 
 These constants are:
 
 <ul>
+<li>
+\code
+ZMQMESSAGE_HEADERONLY
+\endcode
+@copydoc ZMQMESSAGE_HEADERONLY
+
+If you prefer to link, the following problem arises:
+library is built separately, with definite and basically default configuration
+(\ref ZMQMESSAGE_LOG_STREAM, \ref ZMQMESSAGE_EXCEPTION_MACRO),
+So if you need to override them in your application,
+you really need to <b>rebuild shared library</b> with appropriate definitions
+(the same as you define in your application).
+For non header-only builds you may define only \ref ZMQMESSAGE_STRING_CLASS.
+Or just use library as header-only.
+</li>
+
 <li>
 \code
 ZMQMESSAGE_STRING_CLASS

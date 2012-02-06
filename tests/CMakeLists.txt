@@ -15,6 +15,20 @@ target_link_libraries(SimpleTest
 add_test(SimpleTest
   ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/SimpleTest)
 
+add_executable(SimpleTestHO
+  SimpleTest.cpp
+)
+set_target_properties(SimpleTestHO
+  PROPERTIES COMPILE_DEFINITIONS "ZMQMESSAGE_HEADERONLY"
+)
+target_link_libraries(SimpleTestHO
+ pthread
+ ${ZEROMQ_LIBRARIES}
+ #no zmqmessage
+)
+add_test(SimpleTestHO
+  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/SimpleTestHO)
+
 add_executable(PerfTest
   PerfTest.cpp
 )
