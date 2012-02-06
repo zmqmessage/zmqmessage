@@ -2,6 +2,14 @@
  * @file SimpleTest.cpp
  * @author askryabin
  *
+ * \test
+ * @brief
+ * We check correctness of sending, receiving, iterating multipart messages between threads.
+ *
+ * We use different types and methods for insertion and extraction of message parts.
+ * We use binary and text modes.
+ * We use all possible combinations of Routing policies
+ * (simple-to-simple, X-to-X, Simple-to-X and X-to-Simple).
  */
 
 #include "pthread.h"

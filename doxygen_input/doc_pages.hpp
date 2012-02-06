@@ -8,8 +8,8 @@ due to routing policies.</li>
 <li>Checking for multipart message consistency when receiving
 (if number of parts to be received is known in advance)
 <li>Configurable to use application-specific logging and exception policies</li>
-<li>Possibility to use user-supplied string-like class to avoid copying</li>
-<li>Supporting iterators, insert (<<) operator for outgoing and extract (>>) operator for incoming</li>
+<li>Possibility to use user-supplied string-like classes to avoid copying</li>
+<li>Supporting iterators, insert (<<) operator for outgoing messages and extract (>>) operator for incoming messages</li>
 <li>Text (default) and binary \ref zm_modes "modes" for extraction/insertion/iteration of parts</li>
 </ul>
 
@@ -26,10 +26,66 @@ due to routing policies.</li>
     </dd>
   </li>
   <li><a class="el" href="examples.html">Examples</a></li>
-  <li>\ref zm_links "Links"</li>
-  <li>\ref zm_tests "Test Suite"</li>
+  <li><a class="el" href="test.html">Tests list</a></li>
+  <li>\ref zm_build "Build instructions"</li>
+  <li>\ref zm_performance "Performance notes"</li>
+  <li><a class="el" href="https://github.com/zmqmessage/zmqmessage/">GitHub project download page</a></li>
 </dl>
 </div>
+ */
+
+/** \page zm_build
+<h2>Build instructions</h2>
+
+After you have downloaded an archive or cloned a git repository, build the library.
+
+<h3>Build Requirements</h3>
+<ul>
+<li>Library is built with <a href="http://cmake.org/">CMake</a> cross-platform build tool, so you need it installed.
+<li>You need <a href="http://zeromq.org">ZeroMQ</a> library in order to compile ZmqMessage library.
+</li>
+</ul>
+
+<h3>Runtime requirements</h3>
+<ul>
+<li>You need <a href="http://zeromq.org">ZeroMQ</a> library at runtime too.
+</li>
+</ul>
+
+<h3>Build Steps</h3>
+Go to zmqmessage directory and do following:
+\code
+$ mkdir build
+$ cd build
+//configure CMAKE: This command generates makefiles.
+$ cmake -DCMAKE_INSTALL_PREFIX=/path/to/install ..
+//or just "cmake ..". /path/to/install by default is /usr/local
+//or type "ccmake .." for more control, or when zeromq library is installed in non-standard places
+
+//then just make and install:
+$ make
+$ make install
+//or "sudo make install" depending on permissions
+\endcode
+
+That's all.
+ */
+
+/** \page zm_performance
+<h2>Performance notes</h2>
+<hr>
+Nothing comes for free, and our library introduces some overhead
+over plain zeromq messaging interface.
+
+To measure this overhead we have written \ref tests/PerfTest.cpp "performance test".
+We make 100000 request-response transactions between 2 threads and print results.
+
+First of all, we need to say that this "application" does nothing
+but sending and receiving multipart messages, so it should be considered highly synthetic,
+and in real apps performance costs probably will be unnoticeable.
+
+We make 10 contiguous test runs and we get <b>20%</b> of average overhead.
+
  */
 
 /** \page zm_modes
