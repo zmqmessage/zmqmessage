@@ -40,11 +40,14 @@ namespace ZmqMessage
   void
   init_msg(const void* t, size_t sz, zmq::message_t& msg)
   {
-    void *data = ::malloc(sz);
-    assert(data);
-    ::memcpy(data, t, sz);
     try
     {
+      void *data = ::malloc(sz);
+      if (!data)
+      {
+        throw zmq::error_t();
+      }
+      ::memcpy(data, t, sz);
       msg.rebuild(data, sz, &zmqmessage_free, 0);
     }
     catch (const zmq::error_t& e)
