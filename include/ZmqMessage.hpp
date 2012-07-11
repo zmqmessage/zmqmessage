@@ -964,6 +964,13 @@ namespace ZmqMessage
     virtual
     ~Sink();
 
+    template <typename T>
+    iterator<T>
+    inserter()
+    {
+      return iterator<T>(*this);
+    }
+
     /**
      * Assign a pointer to SendObserver object.
      * Note, that the ownership on the given object is taken by Sink object.
