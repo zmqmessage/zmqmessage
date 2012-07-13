@@ -30,13 +30,13 @@ namespace ZmqMessage
     {
       return;
     }
-    if (messages_[idx_] == 0)
+    if ((*messages_)[idx_] == 0)
     {
       cur_ = T();
       return;
     }
 
-    get(*(messages_[idx_]), cur_, binary_mode_);
+    get(*((*messages_)[idx_]), cur_, binary_mode_);
   }
 
   template <class RoutingPolicy>

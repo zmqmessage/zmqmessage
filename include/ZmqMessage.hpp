@@ -152,14 +152,14 @@ namespace ZmqMessage
     private:
       explicit
       iterator(const MsgPtrVec& messages, bool binary_mode, bool end = false) :
-      messages_(messages), idx_(end ? messages.size() : 0),
+      messages_(&messages), idx_(end ? messages.size() : 0),
       binary_mode_(binary_mode)
       {
         set_cur();
       }
 
       iterator(const MsgPtrVec& messages, size_t idx, bool binary_mode) :
-        messages_(messages), idx_(idx), binary_mode_(binary_mode)
+        messages_(&messages), idx_(idx), binary_mode_(binary_mode)
       {
         set_cur();
       }
@@ -202,7 +202,7 @@ namespace ZmqMessage
       }
 
     private:
-      const MsgPtrVec& messages_;
+      const MsgPtrVec* messages_;
       size_t idx_;
       T cur_;
       const bool binary_mode_;
@@ -211,7 +211,7 @@ namespace ZmqMessage
       bool
       end() const
       {
-        return idx_ >= messages_.size();
+        return idx_ >= messages_->size();
       }
 
       bool
