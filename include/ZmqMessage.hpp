@@ -164,6 +164,13 @@ namespace ZmqMessage
         set_cur();
       }
 
+      template <typename U>
+      iterator(const iterator<U>& rhs) :
+        messages_(rhs.messages), idx_(rhs.idx), binary_mode_(rhs.binary_mode)
+      {
+        set_cur();
+      }
+
       friend class Multipart;
 
     public:
@@ -205,7 +212,7 @@ namespace ZmqMessage
       const MsgPtrVec* messages_;
       size_t idx_;
       T cur_;
-      const bool binary_mode_;
+      bool binary_mode_; //non-const to use in assignment
 
       inline
       bool
@@ -217,7 +224,8 @@ namespace ZmqMessage
       bool
       equal(const iterator<T>& rhs) const
       {
-        return end() && rhs.end();
+        return (end() && rhs.end()) ||
+          (messages_ == rhs.messages_ && idx_ == rhs.idx_);
       }
 
       void
