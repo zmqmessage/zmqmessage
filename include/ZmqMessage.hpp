@@ -190,10 +190,16 @@ namespace ZmqMessage
         return ret_val;
       }
 
-      const T
-      operator*()
+      const T&
+      operator*() const
       {
         return cur_;
+      }
+
+      const T*
+      operator->() const
+      {
+        return &cur_;
       }
 
       bool
