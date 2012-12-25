@@ -256,7 +256,7 @@ namespace ZmqMessage
      */
     inline
     bool
-    has_part(size_t idx)
+    has_part(size_t idx) const
     {
       return (parts_.size() > idx && parts_[idx] != 0);
     }
