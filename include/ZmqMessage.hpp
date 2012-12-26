@@ -947,13 +947,6 @@ namespace ZmqMessage
       ++pending_routing_parts_;
     }
 
-    inline
-    unsigned
-    options() const
-    {
-      return options_;
-    }
-
     void
     send_one(
       zmq::message_t* msg, bool use_copy = false)
@@ -977,6 +970,13 @@ namespace ZmqMessage
   public:
     virtual
     ~Sink();
+
+    inline
+    unsigned
+    options() const
+    {
+      return options_;
+    }
 
     template <typename T>
     iterator<T>
