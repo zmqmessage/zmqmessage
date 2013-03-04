@@ -1,5 +1,5 @@
 # Copyright (c) 2010-2011 Phorm, Inc.
-# License: GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
+# License: GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html
 # Author: Andrey Skryabin <andrew@zmqmessage.org>, et al.
 
 include_directories(
@@ -36,8 +36,11 @@ add_test(SimpleTestHO
 add_executable(PerfTest
   PerfTest.cpp
 )
+set_target_properties(PerfTest
+  PROPERTIES COMPILE_DEFINITIONS "HEADERONLY"
+)
 
 target_link_libraries(PerfTest
  pthread
- zmqmessage
+ ${ZEROMQ_LIBRARIES}
 )
