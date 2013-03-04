@@ -243,12 +243,12 @@ test_detach()
     ZmqMessage::OutOptions::CACHE_ON_BLOCK);
   out << "ghjfkjh" << 12 << ZmqMessage::NullMessage << ZmqMessage::Flush;
 
-  typedef std::auto_ptr<ZmqMessage::Multipart> MsgPtr;
-  MsgPtr p(out.detach());
+  typedef std::auto_ptr<ZmqMessage::Multipart> MultipartPtr;
+  MultipartPtr p(out.detach());
   assert(p->size() == 3);
   assert(ZmqMessage::get_string((*p)[1]) == "12");
 
-  MsgPtr p2(p->detach());
+  MultipartPtr p2(p->detach());
   assert(p->size() == 3);
   assert(!p->has_part(0));
   assert(!p->has_part(1));

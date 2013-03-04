@@ -1,7 +1,7 @@
 /**
  * @file StringFace.hpp
  * @copyright Copyright (c) 2010-2011 Phorm, Inc.
- * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
+ * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html
  * @author Andrey Skryabin <andrew@zmqmessage.org>, et al.
  *
  */
@@ -72,6 +72,17 @@ bool
 operator <(const StringFace& s1, const StringFace& s2)
 {
   return compare(s1, s2) < 0;
+}
+
+template <typename Char, typename Traits>
+std::basic_ostream<Char, Traits>&
+operator <<(std::basic_ostream<Char, Traits>& os, const StringFace& substr)
+{
+  if (substr.length())
+  {
+    os.write(substr.data(), substr.length());
+  }
+  return os;
 }
 
 #endif /* ZMQMESSAGE_EXAMPLES_STRINGFACE_HPP_ */

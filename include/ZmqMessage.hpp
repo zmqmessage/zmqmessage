@@ -19,8 +19,10 @@
 #include <zmqmessage/Observers.hpp>
 #include <zmqmessage/DelObj.hpp>
 #include <zmqmessage/NonCopyable.hpp>
-#include <zmqmessage/MsgPtrVec.hpp>
+//#include <zmqmessage/MsgPtrVec.hpp>
+#include <zmqmessage/PartsVec.hpp>
 #include <zmqmessage/RawMessage.hpp>
+#include <zmqmessage/Part.hpp>
 
 #include <ZmqTools.hpp>
 
@@ -73,7 +75,7 @@ namespace ZmqMessage
     receive_routing(zmq::socket_t& sock) {}
 
     inline
-    MsgPtrVec*
+    PartsVec*
     get_routing()
     {
       return 0;
@@ -93,7 +95,7 @@ namespace ZmqMessage
   class XRouting
   {
   private:
-    MsgPtrVec routing_; //!< including null message
+    PartsVec routing_; //!< including null message
 
   protected:
     void
@@ -101,7 +103,7 @@ namespace ZmqMessage
     throw (MessageFormatError, ZmqErrorType);
 
     inline
-    MsgPtrVec*
+    PartsVec*
     get_routing()
     {
       return &routing_;
@@ -109,8 +111,6 @@ namespace ZmqMessage
 
     void
     log_routing_received() const;
-
-    ~XRouting();
   };
 
   /**
@@ -119,7 +119,7 @@ namespace ZmqMessage
   class Multipart : private Private::NonCopyable
   {
   protected:
-    MsgPtrVec parts_;
+    PartsVec parts_;
 
     void
     check_has_part(size_t n) const throw(NoSuchPartError);
@@ -151,14 +151,14 @@ namespace ZmqMessage
 
     private:
       explicit
-      iterator(const MsgPtrVec& messages, bool binary_mode, bool end = false) :
+      iterator(const PartsVec& messages, bool binary_mode, bool end = false) :
       messages_(&messages), idx_(end ? messages.size() : 0),
       binary_mode_(binary_mode)
       {
         set_cur();
       }
 
-      iterator(const MsgPtrVec& messages, size_t idx, bool binary_mode) :
+      iterator(const PartsVec& messages, size_t idx, bool binary_mode) :
         messages_(&messages), idx_(idx), binary_mode_(binary_mode)
       {
         set_cur();
@@ -215,7 +215,7 @@ namespace ZmqMessage
       }
 
     private:
-      const MsgPtrVec* messages_;
+      const PartsVec* messages_;
       size_t idx_;
       T cur_;
       bool binary_mode_; //non-const to use in assignment
@@ -258,7 +258,7 @@ namespace ZmqMessage
     bool
     has_part(size_t idx) const
     {
-      return (parts_.size() > idx && parts_[idx] != 0);
+      return (parts_.size() > idx && parts_[idx].valid());
     }
 
     /**
@@ -348,22 +348,22 @@ namespace ZmqMessage
     /**
      * Get reference to zmq::message_t by index
      */
-    zmq::message_t&
+    Part&
     operator[](size_t i) throw (NoSuchPartError);
 
     /**
-     * Release (disown) message at specified index.
-     * @return 0 if such message is not owned by Multipart
+     * Release (disown) message part at specified index.
+     * @return invalid message if such message is not owned by Multipart
      */
-    zmq::message_t*
+    Part
     release(size_t i);
 
-    inline
-    std::auto_ptr<zmq::message_t>
-    release_ptr(size_t i)
-    {
-      return std::auto_ptr<zmq::message_t>(release(i));
-    }
+//    inline
+//    std::auto_ptr<zmq::message_t>
+//    release_ptr(size_t i)
+//    {
+//      return std::auto_ptr<zmq::message_t>(release(i));
+//    }
   };
 
   /**
@@ -458,13 +458,14 @@ namespace ZmqMessage
     receive_one() throw(ZmqErrorType);
 
     bool
-    do_receive_msg(zmq::message_t& msg) throw(ZmqErrorType)
+    do_receive_msg(Part& part) throw(ZmqErrorType)
     {
-      recv_msg(src_, msg);
-      bool more = has_more(src_);
+      assert(part.valid());
+      recv_msg(src_, part.msg());
+      const bool more = has_more(src_);
       if (receive_observer_)
       {
-        receive_observer_->on_receive_part(msg, more);
+        receive_observer_->on_receive_part(part.msg(), more);
       }
       return more;
     }
@@ -473,7 +474,7 @@ namespace ZmqMessage
     friend class Outgoing;
 
     inline
-    MsgPtrVec*
+    PartsVec*
     get_routing()
     {
       return RoutingPolicy::get_routing();
@@ -917,7 +918,7 @@ namespace ZmqMessage
      * Keep message part until next part or flush
      *  to determine if the part is the latest in the message
      */
-    MsgPtr cached_;
+    Part cached_;
 
     enum State
     {
@@ -936,7 +937,7 @@ namespace ZmqMessage
     Sink(zmq::socket_t& dst, unsigned options,
       OutOptions::SendObserverPtr so = 0, Multipart* incoming = 0) :
       dst_(dst), options_(options), send_observer_(so), incoming_(incoming),
-      outgoing_queue_(0), cached_(0), state_(NOTSENT),
+      outgoing_queue_(0), cached_(false), state_(NOTSENT),
       pending_routing_parts_(0)
     {}
 
@@ -949,23 +950,21 @@ namespace ZmqMessage
 
     void
     send_one(
-      zmq::message_t* msg, bool use_copy = false)
+      Part& msg, bool use_copy = false)
       throw(ZmqErrorType);
 
   private:
     void
-    send_owned(zmq::message_t* owned) throw(ZmqErrorType);
+    send_owned(Part& owned) throw(ZmqErrorType);
 
     void
-    do_send_one(
-      zmq::message_t* msg, bool last) throw(ZmqErrorType);
+    do_send_one(Part& msg, bool last) throw(ZmqErrorType);
 
     bool
-    try_send_first_cached(
-      bool last) throw(ZmqErrorType);
+    try_send_first_cached(bool last) throw(ZmqErrorType);
 
     void
-    add_to_queue(zmq::message_t* msg);
+    add_to_queue(Part& part);
 
   public:
     virtual
@@ -1119,19 +1118,19 @@ namespace ZmqMessage
      * if this object is planned to be detached and used beyond current block.
      */
     Sink&
-    operator<< (zmq::message_t& msg) throw (ZmqErrorType);
+    operator<< (Part& msg) throw (ZmqErrorType);
 
-    /**
-     * Either, we take ownership on message.
-     * Not checking if this message is part of incoming_.
-     * If ptr contains 0, null message is sent
-     */
-    inline Sink&
-    operator<< (MsgPtr msg) throw (ZmqErrorType)
-    {
-      send_owned(msg.get() ? msg.release() : new zmq::message_t(0));
-      return *this;
-    }
+//    /**
+//     * Either, we take ownership on message.
+//     * Not checking if this message is part of incoming_.
+//     * If ptr contains 0, null message is sent
+//     */
+//    inline Sink&
+//    operator<< (MsgPtr msg) throw (ZmqErrorType)
+//    {
+//      send_owned(msg.get() ? msg.release() : new zmq::message_t(0));
+//      return *this;
+//    }
 
     /**
      * Insert raw message (see @c RawMessage)
@@ -1172,7 +1171,7 @@ namespace ZmqMessage
 
     void
     send_routing(
-      MsgPtrVec* routing) throw(ZmqErrorType);
+      PartsVec* routing) throw(ZmqErrorType);
 
   public:
 

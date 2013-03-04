@@ -28,9 +28,9 @@ namespace ZmqMessage
       int flags = base_flags | ((i < multipart.size()-1) ? ZMQ_SNDMORE : 0);
       if (send_observer)
       {
-        send_observer->on_send_part(*(multipart.parts_[i]));
+        send_observer->on_send_part(multipart.parts_[i].msg());
       }
-      send_msg(sock, *(multipart.parts_[i]), flags);
+      send_msg(sock, multipart.parts_[i].msg(), flags);
     }
     if (send_observer)
     {
@@ -41,10 +41,6 @@ namespace ZmqMessage
   void
   Multipart::clear()
   {
-    std::for_each(
-        parts_.begin(), parts_.end(),
-        &Private::del_obj_not_null<zmq::message_t>
-    );
     parts_.clear();
   }
 
@@ -53,8 +49,7 @@ namespace ZmqMessage
   {
     std::auto_ptr<Multipart> m(new Multipart());
     m->reserve(parts_.size());
-    m->parts_ = parts_; //copy pointers
-    parts_.assign(parts_.size(), 0);
+    m->parts_ = parts_; //move structs, current object's parts become invalid
     return m.release();
   }
 
@@ -68,7 +63,7 @@ namespace ZmqMessage
           " parts received, but we requested index: " << n;
       throw NoSuchPartError(ss.str());
     }
-    if (parts_[n] == 0)
+    if (!parts_[n].valid())
     {
       std::ostringstream ss;
       ss << "Multipart zmq message at " << n <<
@@ -77,23 +72,21 @@ namespace ZmqMessage
     }
   }
 
-  zmq::message_t&
+  Part&
   Multipart::operator[](size_t i) throw (NoSuchPartError)
   {
     check_has_part(i);
-    return *(parts_[i]);
+    return parts_[i];
   }
 
-  zmq::message_t*
+  Part
   Multipart::release(size_t i)
   {
     if (i >= size())
     {
-      return 0;
+      return Part(false);
     }
-    zmq::message_t* p = parts_[i];
-    parts_[i] = 0;
-    return p;
+    return parts_[i]; //copy
   }
 
   void
@@ -114,14 +107,15 @@ namespace ZmqMessage
     routing_.reserve(3); //should be enough for most cases
     for (int i = 0; ; ++i)
     {
-      zmq::message_t* msg = new zmq::message_t;
-      routing_.push_back(msg);
+      routing_.push_back(Part());
+      Part& part = routing_.back();
 
-      recv_msg(sock, *msg);
-      ZMQMESSAGE_LOG_STREAM << "Received X route: " << msg->size() << "bytes;"
-        << ZMQMESSAGE_LOG_TERM;
+      recv_msg(sock, part.msg());
+      ZMQMESSAGE_LOG_STREAM <<
+        "Received X route: " << part.msg().size() << "bytes;" <<
+        ZMQMESSAGE_LOG_TERM;
 
-      if (msg->size() == 0)
+      if (part.msg().size() == 0)
       {
         break;
       }
@@ -134,14 +128,6 @@ namespace ZmqMessage
         throw MessageFormatError(ss.str());
       }
     }
-  }
-
-  XRouting::~XRouting()
-  {
-    std::for_each(
-        routing_.begin(), routing_.end(),
-        &Private::del_obj_not_null<zmq::message_t>
-    );
   }
 
   template <class RoutingPolicy>
@@ -175,15 +161,15 @@ namespace ZmqMessage
   bool
   Incoming<RoutingPolicy>::receive_one() throw(ZmqErrorType)
   {
-    parts_.push_back(new zmq::message_t);
-    zmq::message_t& cur_part = *(parts_.back());
+    parts_.push_back(Part());
+    Part& cur_part = parts_.back();
 
-    bool more = do_receive_msg(cur_part);
+    const bool more = do_receive_msg(cur_part);
 
     ZMQMESSAGE_LOG_STREAM << "Incoming received "
-      << cur_part.size() << " bytes: "
-      << ZMQMESSAGE_STRING_CLASS((const char*)cur_part.data(),
-        std::min(cur_part.size(), static_cast<size_t>(256)))
+      << cur_part.msg().size() << " bytes: "
+      << ZMQMESSAGE_STRING_CLASS((const char*)cur_part.msg().data(),
+        std::min(cur_part.msg().size(), static_cast<size_t>(256)))
       << ", has more = " << more << ZMQMESSAGE_LOG_TERM;
     return more;
   }
@@ -301,7 +287,7 @@ namespace ZmqMessage
   Incoming<RoutingPolicy>::fetch_tail(
       std::vector<char>& area, const char* delimiter) throw (ZmqErrorType)
   {
-    append_message_data(*(parts_.back()), area);
+    append_message_data(parts_.back().msg(), area);
     if (is_terminal_)
     {
       return 1;
@@ -318,9 +304,9 @@ namespace ZmqMessage
         area.resize(sz + delim_sz);
         std::copy(delimiter, delimiter + delim_sz, area.begin() + sz);
       }
-      zmq::message_t data_buff;
+      Part data_buff;
       more = do_receive_msg(data_buff);
-      append_message_data(data_buff, area);
+      append_message_data(data_buff.msg(), area);
     }
     return num_messages;
   }
@@ -334,19 +320,19 @@ namespace ZmqMessage
       return 0;
     }
 
-    zmq::message_t data_buff;
+    Part data_buff;
     bool more = false;
     int num_messages = 0;
     if (parts_.empty()) //we haven't received anything
     {
-      if (!try_recv_msg(src_, data_buff, ZMQ_NOBLOCK))
+      if (!try_recv_msg(src_, data_buff.msg(), ZMQ_NOBLOCK))
       {
         return 0;
       }
       more = has_more(src_);
       if (receive_observer_)
       {
-        receive_observer_->on_receive_part(data_buff, more);
+        receive_observer_->on_receive_part(data_buff.msg(), more);
       }
       num_messages = 1;
     }
@@ -368,14 +354,15 @@ namespace ZmqMessage
     zmq::message_t& msg) throw(NoSuchPartError)
   {
     check_has_part(cur_extract_idx_);
-    copy_msg(msg, *(parts_[cur_extract_idx_++]));
+    copy_msg(msg, parts_[cur_extract_idx_++].msg());
     return *this;
   }
 
   Sink&
   NullMessage(Sink& out)
   {
-    out << *(new zmq::message_t(0));
+    Part p;
+    out << p;
     return out;
   }
 
@@ -389,14 +376,14 @@ namespace ZmqMessage
   template <>
   void
   Outgoing<SimpleRouting>::send_routing(
-    MsgPtrVec* routing) throw (ZmqErrorType)
+    PartsVec* routing) throw (ZmqErrorType)
   {
   }
 
   template <>
   void
   Outgoing<XRouting>::send_routing(
-    MsgPtrVec* routing) throw (ZmqErrorType)
+    PartsVec* routing) throw (ZmqErrorType)
   {
     if (routing == 0)
     {
@@ -404,45 +391,37 @@ namespace ZmqMessage
         "X route: route vector is empty, send null message only"
         << ZMQMESSAGE_LOG_TERM;
       add_pending_routing_part();
-      send_one(new zmq::message_t, false);
+      Part part;
+      send_one(part, false); //empty part
     }
     else
     {
       bool copy = options() & OutOptions::COPY_INCOMING;
-      for (MsgPtrVec::iterator it = routing->begin();
-          it != routing->end(); ++it)
+      for (PartsVec::iterator it = routing->begin();
+        it != routing->end(); ++it)
       {
-        zmq::message_t* msg = *it;
-        if (!copy)
-        {
-          *it = 0;
-        }
         add_pending_routing_part();
-        send_one(msg, copy);
+        send_one(*it, copy);
       }
     }
   }
 
   Sink&
-  Sink::operator<< (zmq::message_t& msg)
+  Sink::operator<< (Part& msg)
     throw (ZmqErrorType)
   {
     bool copy_mode = options_ & OutOptions::COPY_INCOMING;
     bool use_copy = false;
     if (incoming_)
     {
-      MsgPtrVec::iterator it = std::find(
-        incoming_->parts_.begin(), incoming_->parts_.end(), &msg);
+      PartsVec::iterator it = std::find(
+        incoming_->parts_.begin(), incoming_->parts_.end(), msg);
       if (it != incoming_->parts_.end())
       {
         use_copy = copy_mode;
-        if (!copy_mode)
-        {
-          *it = 0;
-        }
       }
     }
-    send_one(&msg, use_copy);
+    send_one(msg, use_copy);
     return *this;
   }
 
@@ -452,27 +431,27 @@ namespace ZmqMessage
   {
     if (m.deleter)
     {
-      send_owned(new zmq::message_t(m.data.ptr, m.sz, m.deleter, 0));
+      Part part(m.data.ptr, m.sz, m.deleter, 0);
+      send_owned(part);
     }
     else
     {
-      MsgPtr msg(new zmq::message_t);
-      init_msg(m.data.cptr, m.sz, *msg);
-      send_owned(msg.release());
+      Part part;
+      init_msg(m.data.cptr, m.sz, part.msg());
+      send_owned(part);
     }
     return *this;
   }
 
   void
-  Sink::add_to_queue(
-    zmq::message_t* msg)
+  Sink::add_to_queue(Part& msg)
   {
     outgoing_queue_->parts_.push_back(msg);
   }
 
   void
   Sink::do_send_one(
-    zmq::message_t* msg, bool last)
+    Part& msg, bool last)
     throw (ZmqErrorType)
   {
     int flag = 0;
@@ -481,16 +460,16 @@ namespace ZmqMessage
 
     if (send_observer_ && pending_routing_parts_ == 0)
     {
-      send_observer_->on_send_part(*msg);
+      send_observer_->on_send_part(msg.msg());
     }
 
     ZMQMESSAGE_LOG_STREAM
-      << "Outgoing sending msg, " << msg->size() << " bytes: "
-      << ZMQMESSAGE_STRING_CLASS((const char*)msg->data(),
-        std::min(msg->size(), static_cast<size_t>(256)))
+      << "Outgoing sending msg, " << msg.msg().size() << " bytes: "
+      << ZMQMESSAGE_STRING_CLASS((const char*)msg.msg().data(),
+        std::min(msg.msg().size(), static_cast<size_t>(256)))
       << ", flag = " << flag << ZMQMESSAGE_LOG_TERM;
 
-    send_msg(dst_, *msg, flag);
+    send_msg(dst_, msg.msg(), flag);
 
     if (pending_routing_parts_ > 0)
     {
@@ -499,11 +478,10 @@ namespace ZmqMessage
   }
 
   bool
-  Sink::try_send_first_cached(bool last)
-    throw(ZmqErrorType)
+  Sink::try_send_first_cached(bool last) throw(ZmqErrorType)
   {
     assert(state_ == NOTSENT);
-    assert(cached_.get());
+    assert(cached_.valid());
     bool ret = true;
     try
     {
@@ -516,7 +494,7 @@ namespace ZmqMessage
       }
       else
       {
-        do_send_one(cached_.get(), last);
+        do_send_one(cached_, last);
         state_ = SENDING;
       }
     }
@@ -532,7 +510,7 @@ namespace ZmqMessage
             << ZMQMESSAGE_LOG_TERM;
           state_ = QUEUEING;
           outgoing_queue_.reset(new Multipart);
-          add_to_queue(cached_.release());
+          add_to_queue(cached_);
         }
         else if (options_ & OutOptions::DROP_ON_BLOCK)
         {
@@ -548,7 +526,7 @@ namespace ZmqMessage
       }
       else
       {
-        cached_.reset(0);
+        cached_.mark_invalid();
         ZMQMESSAGE_LOG_STREAM <<
           "Cannot send first outgoing message: error: " << e.what() <<
           ZMQMESSAGE_LOG_TERM;
@@ -560,66 +538,62 @@ namespace ZmqMessage
   }
 
   void
-  Sink::send_one(
-    zmq::message_t* msg, bool use_copy) throw(ZmqErrorType)
+  Sink::send_one(Part& msg, bool use_copy) throw(ZmqErrorType)
   {
-    MsgPtr p(0);
     if (use_copy)
     {
-      p.reset(new zmq::message_t);
-      copy_msg(*p, *msg);
+      Part p;
+      p.copy(msg);
+      send_owned(p);
     }
     else
     {
-      p.reset(msg);
+      send_owned(msg);
     }
-    send_owned(p.release());
   }
 
   void
-  Sink::send_owned(
-    zmq::message_t* owned) throw(ZmqErrorType)
+  Sink::send_owned(Part& owned) throw(ZmqErrorType)
   {
-    MsgPtr msg(owned);
     switch (state_)
     {
     case NOTSENT:
-      if (!cached_.get())
+      if (!cached_.valid())
       {
-        cached_ = msg;
+        cached_.move(owned);
         break;
       }
       if (try_send_first_cached(false))
       {
-        cached_ = msg;
+        cached_.move(owned);
       }
       else
       {
         if (state_ == QUEUEING)
         {
-          add_to_queue(msg.release());
+          add_to_queue(owned);
         }
       }
 
       break;
     case SENDING:
-      if (cached_.get())
+      if (cached_.valid())
       {
-        do_send_one(cached_.get(), false);
-        cached_ = msg;
+        do_send_one(cached_, false);
+        cached_.move(owned);
       }
       else
       {
         ZMQMESSAGE_LOG_STREAM <<
           "Outgoing message in state SENDING, no messages cached yet - strange"
           << ZMQMESSAGE_LOG_TERM;
-        cached_ = msg;
+        cached_.move(owned);
       }
 
       break;
     case QUEUEING:
       assert(outgoing_queue_.get());
-      add_to_queue(msg.release());
+      add_to_queue(owned);
 
       break;
     case DROPPING:
@@ -638,7 +612,7 @@ namespace ZmqMessage
     {
       return;
     }
-    if (cached_.get())
+    if (cached_.valid())
     {
       //handle cached
       switch (state_)
@@ -647,14 +621,14 @@ namespace ZmqMessage
         try_send_first_cached(true);
         break;
       case SENDING:
-        do_send_one(cached_.get(), true);
+        do_send_one(cached_, true);
         break;
 
       default:
         //cannot be
         break;
       }
-      cached_.reset(0);
+      cached_.mark_invalid();
     }
 
     if (state_ != FLUSHED)
@@ -684,15 +658,10 @@ namespace ZmqMessage
     bool copy, size_t idx_from, size_t idx_to)
     throw(ZmqErrorType)
   {
-    size_t to = std::min(idx_to, multipart.parts_.size());
+    const size_t to = std::min(idx_to, multipart.parts_.size());
     for (size_t i = idx_from; i < to; ++i)
     {
-      zmq::message_t* msg = multipart.parts_[i];
-      if (!copy)
-      {
-        multipart.parts_[i] = 0;
-      }
-      send_one(msg, copy);
+      send_one(multipart.parts_[i], copy);
     }
   }
 
@@ -703,14 +672,14 @@ namespace ZmqMessage
   {
     for (bool more = has_more(relay_src); more; )
     {
-      MsgPtr cur_part(new zmq::message_t);
-      recv_msg(relay_src, *cur_part);
+      Part cur_part;
+      recv_msg(relay_src, cur_part.msg());
       more = has_more(relay_src);
       if (receive_observer)
       {
-        receive_observer->on_receive_part(*cur_part, more);
+        receive_observer->on_receive_part(cur_part.msg(), more);
       }
-      send_owned(cur_part.release());
+      send_owned(cur_part);
     }
   }
 

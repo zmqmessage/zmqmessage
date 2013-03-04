@@ -1,7 +1,7 @@
 /**
  * @file PerfTest.cpp
  * @copyright Copyright (c) 2010-2011 Phorm, Inc.
- * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
+ * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html
  * @author Andrey Skryabin <andrew@zmqmessage.org>, et al.
  *
  *
@@ -22,11 +22,16 @@
 /**
  */
 
-#define ZMQMESSAGE_LOG_STREAM ZMQMESSAGE_LOG_STREAM_NONE
+#include "../examples/StringFace.hpp"
+
+#define ZMQMESSAGE_LOG_STREAM if(1); else std::cerr
+#define ZMQMESSAGE_STRING_CLASS StringFace
 
 #include "ZmqMessage.hpp"
+#ifdef HEADERONLY
+# include "ZmqMessageImpl.hpp"
+#endif
 
-#include "../examples/StringFace.hpp"
 
 #define ARRAY_LEN(arr) sizeof(arr)/sizeof((arr)[0])
 

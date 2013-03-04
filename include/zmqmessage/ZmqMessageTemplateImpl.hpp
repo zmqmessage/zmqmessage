@@ -30,13 +30,13 @@ namespace ZmqMessage
     {
       return;
     }
-    if ((*messages_)[idx_] == 0)
+    if (!(*messages_)[idx_].valid())
     {
       cur_ = T();
       return;
     }
 
-    get(*((*messages_)[idx_]), cur_, binary_mode_);
+    get((*messages_)[idx_].msg(), cur_, binary_mode_);
   }
 
   template <class RoutingPolicy>
@@ -45,7 +45,7 @@ namespace ZmqMessage
   Incoming<RoutingPolicy>::operator>> (T& t) throw(NoSuchPartError)
   {
     check_has_part(cur_extract_idx_);
-    get(*(parts_[cur_extract_idx_++]), t, binary_mode_);
+    get(parts_[cur_extract_idx_++].msg(), t, binary_mode_);
     return *this;
   }
 
@@ -53,10 +53,10 @@ namespace ZmqMessage
   Sink&
   Sink::operator<< (const T& t) throw (ZmqErrorType)
   {
-    MsgPtr msg(new zmq::message_t);
+    Part part;
     bool binary_mode = options_ & OutOptions::BINARY_MODE;
-    init_msg(t, *msg, binary_mode);
-    send_owned(msg.release());
+    init_msg(t, part.msg(), binary_mode);
+    send_owned(part);
     return *this;
   }
 
@@ -69,16 +69,16 @@ namespace ZmqMessage
   {
     for (bool more = has_more(relay_src); more; )
     {
-      MsgPtr cur_part(new zmq::message_t);
-      recv_msg(relay_src, *cur_part);
+      Part cur_part;
+      recv_msg(relay_src, cur_part.msg());
       more = has_more(relay_src);
       if (receive_observer)
       {
-        receive_observer->on_receive_part(*cur_part, more);
+        receive_observer->on_receive_part(cur_part.msg(), more);
       }
-      size_t sz = cur_part->size();
+      const size_t sz = cur_part.msg().size();
       acc(sz);
-      send_owned(cur_part.release());
+      send_owned(cur_part);
     }
   }
 }
