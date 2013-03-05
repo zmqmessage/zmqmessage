@@ -38,12 +38,6 @@ namespace ZmqMessage
     }
   }
 
-  void
-  Multipart::clear()
-  {
-    parts_.clear();
-  }
-
   Multipart*
   Multipart::detach()
   {

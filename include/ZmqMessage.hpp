@@ -126,9 +126,6 @@ namespace ZmqMessage
 
   private:
 
-    void
-    clear();
-
     friend class Sink;
 
     friend void
@@ -240,7 +237,6 @@ namespace ZmqMessage
   public:
     virtual ~Multipart()
     {
-      clear();
     }
 
     /**
