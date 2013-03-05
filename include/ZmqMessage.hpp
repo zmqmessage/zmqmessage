@@ -354,12 +354,15 @@ namespace ZmqMessage
     Part
     release(size_t i);
 
-//    inline
-//    std::auto_ptr<zmq::message_t>
-//    release_ptr(size_t i)
-//    {
-//      return std::auto_ptr<zmq::message_t>(release(i));
-//    }
+    inline
+    std::auto_ptr<zmq::message_t>
+    release_ptr(size_t i)
+    {
+      Part part = release(i);
+      std::auto_ptr<zmq::message_t> ptr(new zmq::message_t());
+      ptr->move(&(part.msg()));
+      return ptr;
+    }
   };
 
   /**
@@ -1116,17 +1119,22 @@ namespace ZmqMessage
     Sink&
     operator<< (Part& msg) throw (ZmqErrorType);
 
-//    /**
-//     * Either, we take ownership on message.
-//     * Not checking if this message is part of incoming_.
-//     * If ptr contains 0, null message is sent
-//     */
-//    inline Sink&
-//    operator<< (MsgPtr msg) throw (ZmqErrorType)
-//    {
-//      send_owned(msg.get() ? msg.release() : new zmq::message_t(0));
-//      return *this;
-//    }
+    /**
+     * Either, we take ownership on message.
+     * Not checking if this message is part of incoming_.
+     * If ptr contains 0, null message is sent
+     */
+    inline Sink&
+    operator<< (MsgPtr msg) throw (ZmqErrorType)
+    {
+      Part part;
+      if (msg.get())
+      {
+        part.move(*msg);
+      }
+      send_owned(part);
+      return *this;
+    }
 
     /**
      * Insert raw message (see @c RawMessage)

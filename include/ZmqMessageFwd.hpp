@@ -12,6 +12,7 @@
 
 namespace ZmqMessage
 {
+  class Part;
 
   class SimpleRouting;
 

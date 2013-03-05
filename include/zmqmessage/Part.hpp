@@ -134,6 +134,14 @@ namespace ZmqMessage
     }
 
     inline
+    void
+    move(zmq::message_t& src)
+    {
+      zmq_msg_move(&msg_, static_cast<zmq_msg_t*>(static_cast<void*>(&src)));
+      valid_ = true;
+    }
+
+    inline
     operator zmq::message_t& ()
     {
       return msg();
