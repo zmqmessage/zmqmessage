@@ -11,6 +11,10 @@ namespace ZmqMessage
 {
   namespace Private
   {
+    /**
+     * Scoped allocation of memory block using given allocator type.
+     * Memory can be released.
+     */
     template <typename Allocator>
     class ScopedAlloc : private Allocator
     {

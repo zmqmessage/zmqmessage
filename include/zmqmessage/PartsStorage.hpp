@@ -99,24 +99,6 @@ namespace ZmqMessage
       return &parts_;
     }
   };
-
-  namespace Private
-  {
-    template <class T>
-    struct IsDynamicPartsStorage
-    {
-      typedef char Yes;
-      typedef struct { char c[2]; } No;
-
-      template <typename U>
-      static No check_dynamic(...);
-
-      template <typename U>
-      static Yes check_dynamic(typename U::PartsAllocatorType* = 0);
-
-      static const bool value = (sizeof(check_dynamic<T>(0)) == sizeof(Yes));
-    };
-  }
 }
 
 #endif /* ZMQMESSAGE_PARTSSTORAGE_HPP_ */

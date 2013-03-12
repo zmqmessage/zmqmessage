@@ -59,6 +59,10 @@ namespace ZmqMessage
   {
     if (parts_)
     {
+      for (size_t i = 0; i < size_; ++i)
+      {
+        Allocator::destroy(&(parts_[i]));
+      }
       Allocator::deallocate(parts_, capacity_);
     }
   }

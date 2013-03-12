@@ -30,9 +30,6 @@ namespace ZmqMessage
         Multipart(PartsStorage::parts_addr(), &size_)
       {}
 
-      static const bool is_dynamic =
-        Private::IsDynamicPartsStorage<PartsStorage>::value;
-
       friend class ::ZmqMessage::Sink;
 
     protected:
