@@ -1,7 +1,7 @@
 /**
  * @file ZmqMessageImpl.hpp
  * @copyright Copyright (c) 2010-2011 Phorm, Inc.
- * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
+ * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html
  * @author Andrey Skryabin <andrew@zmqmessage.org>, et al.
  *
  * This file generates all definitions.
@@ -21,7 +21,7 @@
 
 namespace ZmqMessage
 {
-  //explicit template instantiations - it brings the code
+  //explicit template instantiations for default storages - it brings the code
   template class Incoming<SimpleRouting>;
   template class Incoming<XRouting>;
   template class Outgoing<SimpleRouting>;

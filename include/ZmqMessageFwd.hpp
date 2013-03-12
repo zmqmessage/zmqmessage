@@ -14,6 +14,16 @@ namespace ZmqMessage
 {
   class Part;
 
+  //parts storage policies
+
+  template <size_t N>
+  class StackPartsStorage;
+
+  template <typename Allocator>
+  class DynamicPartsStorage;
+
+  //routing policies
+
   class SimpleRouting;
 
   class XRouting;
@@ -22,7 +32,7 @@ namespace ZmqMessage
 
   class ReceiveObserver;
 
-  template <class RoutingPolicy>
+  template <class RoutingPolicy, class PartsStorage>
   class Incoming;
 
   class SendObserver;

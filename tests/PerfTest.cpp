@@ -138,8 +138,7 @@ multipart_receiver(void* arg)
 
   for (size_t i = 0; i < ITERS; ++i)
   {
-    ZmqMessage::Incoming<ZmqMessage::SimpleRouting> incoming(s);
-    incoming.reserve(3);
+    ZmqMessage::Incoming<ZmqMessage::SimpleRouting> incoming(s, 3);
 
     incoming.receive(3, req_parts, true);
 

@@ -28,23 +28,14 @@ namespace ZmqMessage
       int flags = base_flags | ((i < multipart.size()-1) ? ZMQ_SNDMORE : 0);
       if (send_observer)
       {
-        send_observer->on_send_part(multipart.parts_[i].msg());
+        send_observer->on_send_part(multipart[i].msg());
       }
-      send_msg(sock, multipart.parts_[i].msg(), flags);
+      send_msg(sock, multipart[i].msg(), flags);
     }
     if (send_observer)
     {
       send_observer->on_flush();
     }
-  }
-
-  Multipart*
-  Multipart::detach()
-  {
-    std::auto_ptr<Multipart> m(new Multipart());
-    m->reserve(parts_.size());
-    m->parts_ = parts_; //move structs, current object's parts become invalid
-    return m.release();
   }
 
   void
@@ -57,7 +48,7 @@ namespace ZmqMessage
           " parts received, but we requested index: " << n;
       throw NoSuchPartError(ss.str());
     }
-    if (!parts_[n].valid())
+    if (!(*parts_ptr_)[n].valid())
     {
       std::ostringstream ss;
       ss << "Multipart zmq message at " << n <<
@@ -70,7 +61,14 @@ namespace ZmqMessage
   Multipart::operator[](size_t i) throw (NoSuchPartError)
   {
     check_has_part(i);
-    return parts_[i];
+    return (*parts_ptr_)[i];
+  }
+
+  const Part&
+  Multipart::operator[](size_t i) const throw (NoSuchPartError)
+  {
+    check_has_part(i);
+    return (*parts_ptr_)[i];
   }
 
   Part
@@ -80,36 +78,42 @@ namespace ZmqMessage
     {
       return Part(false);
     }
-    return parts_[i]; //copy
+    return (*parts_ptr_)[i]; //copy
   }
 
   void
   XRouting::log_routing_received() const
   {
     ZMQMESSAGE_LOG_STREAM << "Receiving multipart, route received: "
-      << routing_.size() << " parts";
+      << size_ << " parts";
   }
 
   void
   XRouting::receive_routing(zmq::socket_t& sock)
     throw (MessageFormatError, ZmqErrorType)
   {
-    if (!routing_.empty())
+    if (size_)
     {
       return;
     }
-    routing_.reserve(3); //should be enough for most cases
+
     for (int i = 0; ; ++i)
     {
-      routing_.push_back(Part());
-      Part& part = routing_.back();
+      Part* const part = next();
+      if (!part)
+      {
+        std::ostringstream ss;
+        ss << "Receiving multipart message: reading route info failed: "
+            << "part " << (i+1) << " cannot be allocated.";
+        throw MessageFormatError(ss.str());
+      }
 
-      recv_msg(sock, part.msg());
+      recv_msg(sock, part->msg());
       ZMQMESSAGE_LOG_STREAM <<
-        "Received X route: " << part.msg().size() << "bytes;" <<
+        "Received X route: " << part->msg().size() << "bytes;" <<
         ZMQMESSAGE_LOG_TERM;
 
-      if (part.msg().size() == 0)
+      if (part->msg().size() == 0)
       {
         break;
       }
@@ -122,234 +126,6 @@ namespace ZmqMessage
         throw MessageFormatError(ss.str());
       }
     }
-  }
-
-  template <class RoutingPolicy>
-  void
-  Incoming<RoutingPolicy>::check_is_terminal() const throw(MessageFormatError)
-  {
-    if (!is_terminal_)
-    {
-      std::ostringstream ss;
-      ss <<
-        "Receiving multipart "
-        "Has more messages after part " << size() << ", but must be terminal";
-      throw MessageFormatError(ss.str());
-    }
-  }
-
-  template <class RoutingPolicy>
-  void
-  Incoming<RoutingPolicy>::append_message_data(
-    zmq::message_t& message, std::vector<char>& area) const
-  {
-    std::vector<char>::size_type sz = area.size();
-    area.resize(sz + message.size());
-    std::copy(static_cast<char*>(message.data()),
-              static_cast<char*>(message.data()) + message.size(),
-              area.begin() + sz
-    );
-  }
-
-  template <class RoutingPolicy>
-  bool
-  Incoming<RoutingPolicy>::receive_one() throw(ZmqErrorType)
-  {
-    parts_.push_back(Part());
-    Part& cur_part = parts_.back();
-
-    const bool more = do_receive_msg(cur_part);
-
-    ZMQMESSAGE_LOG_STREAM << "Incoming received "
-      << cur_part.msg().size() << " bytes: "
-      << ZMQMESSAGE_STRING_CLASS((const char*)cur_part.msg().data(),
-        std::min(cur_part.msg().size(), static_cast<size_t>(256)))
-      << ", has more = " << more << ZMQMESSAGE_LOG_TERM;
-    return more;
-  }
-
-  template <class RoutingPolicy>
-  void
-  Incoming<RoutingPolicy>::validate(
-    const char* part_names[],
-    size_t part_names_length, bool strict)
-    throw (MessageFormatError)
-  {
-    if (parts_.size() < part_names_length)
-    {
-      std::ostringstream ss;
-      ss <<
-        "Validating received multipart: "
-        "No more messages after " << part_names[parts_.size() - 1] <<
-        "(" << (parts_.size()) << "), expected " <<
-        (strict ? "exactly" : "at least") << " " << part_names_length;
-      throw MessageFormatError(ss.str());
-    }
-    if (strict && parts_.size() > part_names_length)
-    {
-      std::ostringstream ss;
-      ss <<
-        "Validating received multipart: "
-        "Have received " << parts_.size() << " parts, while expected "
-        "exactly " << part_names_length;
-      throw MessageFormatError(ss.str());
-    }
-  }
-
-  template <class RoutingPolicy>
-  Incoming <RoutingPolicy>&
-  Incoming<RoutingPolicy>::receive(
-      size_t parts, const char* part_names[],
-      size_t part_names_length, bool check_terminal)
-      throw (MessageFormatError, ZmqErrorType)
-  {
-    RoutingPolicy::receive_routing(src_);
-    RoutingPolicy::log_routing_received();
-
-    for (size_t i = 0, init_parts = size(); i < parts; ++i)
-    {
-      bool more = receive_one();
-      const char* const part_name =
-        (i < part_names_length) ? part_names[i] : "<unnamed>";
-
-      if (i < parts - 1 && !more)
-      {
-        is_terminal_ = true;
-        std::ostringstream ss;
-        ss <<
-          "Receiving multipart: "
-          "No more messages after " << part_name <<
-          "(" << (init_parts + i) << "), expected more";
-        throw MessageFormatError(ss.str());
-      }
-      if (i == parts - 1 && more)
-      {
-        is_terminal_= false;
-        if (check_terminal)
-        {
-          std::ostringstream ss;
-          ss <<
-            "Receiving multipart: "
-            "Has more messages after " << part_name <<
-            "(" << (init_parts + i) << "), expected no more messages";
-          throw MessageFormatError(ss.str());
-        }
-      }
-      if (i == parts - 1 && !more)
-      {
-        is_terminal_ = true;
-      }
-    }
-    return *this;
-  }
-
-  template <class RoutingPolicy>
-  Incoming <RoutingPolicy>&
-  Incoming<RoutingPolicy>::receive_all(
-      size_t min_parts, const char* part_names[], size_t part_names_length)
-      throw (MessageFormatError, ZmqErrorType)
-  {
-    receive(min_parts, part_names, part_names_length, false);
-
-    while (!is_terminal_)
-    {
-      is_terminal_ = !receive_one();
-    }
-
-    return *this;
-  }
-
-  template <class RoutingPolicy>
-  Incoming <RoutingPolicy>&
-  Incoming<RoutingPolicy>::receive_up_to(
-    size_t min_parts,
-    const char* part_names[], size_t max_parts)
-    throw (MessageFormatError, ZmqErrorType)
-  {
-    receive(min_parts, part_names, false);
-
-    for (size_t n = min_parts; n < max_parts && !is_terminal_; ++n)
-    {
-      is_terminal_ = !receive_one();
-    }
-
-    return *this;
-  }
-
-  template <class RoutingPolicy>
-  int
-  Incoming<RoutingPolicy>::fetch_tail(
-      std::vector<char>& area, const char* delimiter) throw (ZmqErrorType)
-  {
-    append_message_data(parts_.back().msg(), area);
-    if (is_terminal_)
-    {
-      return 1;
-    }
-
-    size_t delim_sz = (delimiter) ? ::strlen(delimiter) : 0;
-
-    int num_messages = 1;
-    for (bool more = has_more(src_); more; ++num_messages)
-    {
-      if (delim_sz)
-      {
-        std::vector<char>::size_type sz = area.size();
-        area.resize(sz + delim_sz);
-        std::copy(delimiter, delimiter + delim_sz, area.begin() + sz);
-      }
-      Part data_buff;
-      more = do_receive_msg(data_buff);
-      append_message_data(data_buff.msg(), area);
-    }
-    return num_messages;
-  }
-
-  template <class RoutingPolicy>
-  int
-  Incoming<RoutingPolicy>::drop_tail() throw(ZmqErrorType)
-  {
-    if (is_terminal_)
-    {
-      return 0;
-    }
-
-    Part data_buff;
-    bool more = false;
-    int num_messages = 0;
-    if (parts_.empty()) //we haven't received anything
-    {
-      if (!try_recv_msg(src_, data_buff.msg(), ZMQ_NOBLOCK))
-      {
-        return 0;
-      }
-      more = has_more(src_);
-      if (receive_observer_)
-      {
-        receive_observer_->on_receive_part(data_buff.msg(), more);
-      }
-      num_messages = 1;
-    }
-    else
-    {
-      more = has_more(src_);
-    }
-
-    for (; more; ++num_messages)
-    {
-      more = do_receive_msg(data_buff);
-    }
-    return num_messages;
-  }
-
-  template <class RoutingPolicy>
-  Incoming<RoutingPolicy>&
-  Incoming<RoutingPolicy>::operator>> (
-    zmq::message_t& msg) throw(NoSuchPartError)
-  {
-    check_has_part(cur_extract_idx_);
-    copy_msg(msg, parts_[cur_extract_idx_++].msg());
-    return *this;
   }
 
   Sink&
@@ -370,19 +146,19 @@ namespace ZmqMessage
   template <>
   void
   Outgoing<SimpleRouting>::send_routing(
-    PartsVec* routing) throw (ZmqErrorType)
+    Part* routing, size_t num) throw (ZmqErrorType)
   {
   }
 
   template <>
   void
   Outgoing<XRouting>::send_routing(
-    PartsVec* routing) throw (ZmqErrorType)
+    Part* routing, size_t num) throw (ZmqErrorType)
   {
-    if (routing == 0)
+    if (routing == 0 || num == 0)
     {
       ZMQMESSAGE_LOG_STREAM <<
-        "X route: route vector is empty, send null message only"
+        "X route: route is empty, send null message only"
         << ZMQMESSAGE_LOG_TERM;
       add_pending_routing_part();
       Part part;
@@ -390,12 +166,11 @@ namespace ZmqMessage
     }
     else
     {
-      bool copy = options() & OutOptions::COPY_INCOMING;
-      for (PartsVec::iterator it = routing->begin();
-        it != routing->end(); ++it)
+      const bool copy = options() & OutOptions::COPY_INCOMING;
+      for (size_t n = 0; n < num; ++n)
       {
         add_pending_routing_part();
-        send_one(*it, copy);
+        send_one(routing[n], copy);
       }
     }
   }
@@ -404,13 +179,13 @@ namespace ZmqMessage
   Sink::operator<< (Part& msg)
     throw (ZmqErrorType)
   {
-    bool copy_mode = options_ & OutOptions::COPY_INCOMING;
+    const bool copy_mode = options_ & OutOptions::COPY_INCOMING;
     bool use_copy = false;
     if (incoming_)
     {
-      PartsVec::iterator it = std::find(
-        incoming_->parts_.begin(), incoming_->parts_.end(), msg);
-      if (it != incoming_->parts_.end())
+      Part* p = std::find(
+        incoming_->parts(), incoming_->parts() + incoming_->size(), msg);
+      if (p != incoming_->parts() + incoming_->size())
       {
         use_copy = copy_mode;
       }
@@ -440,7 +215,9 @@ namespace ZmqMessage
   void
   Sink::add_to_queue(Part& msg)
   {
-    outgoing_queue_->parts_.push_back(msg);
+    Part* target = outgoing_queue_->next();
+    assert(target);
+    target->move(msg);
   }
 
   void
@@ -503,7 +280,7 @@ namespace ZmqMessage
             << "Cannot send first outgoing message: would block: start caching"
             << ZMQMESSAGE_LOG_TERM;
           state_ = QUEUEING;
-          outgoing_queue_.reset(new Multipart);
+          outgoing_queue_.reset(new QueueContainer(init_queue_len));
           add_to_queue(cached_);
         }
         else if (options_ & OutOptions::DROP_ON_BLOCK)
@@ -652,10 +429,10 @@ namespace ZmqMessage
     bool copy, size_t idx_from, size_t idx_to)
     throw(ZmqErrorType)
   {
-    const size_t to = std::min(idx_to, multipart.parts_.size());
+    const size_t to = std::min(idx_to, multipart.size());
     for (size_t i = idx_from; i < to; ++i)
     {
-      send_one(multipart.parts_[i], copy);
+      send_one(multipart[i], copy);
     }
   }
 
