@@ -22,6 +22,8 @@
 
 #include <string>
 
+#define ZMQMESSAGE_DYNAMIC_DEFAULT_CAPACITY 2
+
 #include "ZmqMessage.hpp"
 
 #ifdef HEADERONLY
@@ -89,7 +91,7 @@ public:
 
 };
 
-template <typename Routing, int socktype>
+template <typename Routing, typename Storage, int socktype>
 void* req(void* arg)
 {
   zmq::context_t& ctx = *static_cast<zmq::context_t*>(arg);
@@ -121,7 +123,7 @@ void* req(void* arg)
   assert(obs.sent == 5);
 
   //response
-  ZmqMessage::Incoming<Routing> incoming(s);
+  ZmqMessage::Incoming<Routing, Storage> incoming(s);
 
   incoming.receive(
     ARRAY_LEN(res_parts), res_parts, ARRAY_LEN(res_parts), true);
@@ -154,7 +156,7 @@ void* req(void* arg)
   pthread_exit(0);
 }
 
-template <typename Routing, int socktype>
+template <typename Routing, typename Storage, int socktype>
 void* res(void* arg)
 {
   zmq::context_t& ctx = *static_cast<zmq::context_t*>(arg);
@@ -164,7 +166,7 @@ void* res(void* arg)
   std::cout << "res: bound" << std::endl;
 
   //request
-  ZmqMessage::Incoming<Routing> incoming(s);
+  ZmqMessage::Incoming<Routing, Storage> incoming(s);
 
   CountingObserver observer;
   incoming.set_receive_observer(&observer);
@@ -205,22 +207,27 @@ void* res(void* arg)
   pthread_exit(0);
 }
 
-template <typename ReqRouting, int reqsocktype, typename ResRouting, int ressocktype>
-void test(zmq::context_t& ctx_, const char* name)
+template <
+  typename Storage,
+  typename ReqRouting, int reqsocktype,
+  typename ResRouting, int ressocktype>
+void test(const char* name)
 {
   zmq::context_t ctx(1);
   pthread_t req_thread, res_thread;
 
-  std::cout << "main: testing " << name << std::endl;
+  std::cout << ">>>>>>>>>>>>>  testing " << name << std::endl;
 
-  pthread_create(&req_thread, NULL, &req<ReqRouting, reqsocktype>, &ctx);
-  pthread_create(&res_thread, NULL, &res<ResRouting, ressocktype>, &ctx);
+  pthread_create(
+    &req_thread, NULL, &req<ReqRouting, Storage, reqsocktype>, &ctx);
+  pthread_create(
+    &res_thread, NULL, &res<ResRouting, Storage, ressocktype>, &ctx);
 
   pthread_join(req_thread, NULL);
   pthread_join(res_thread, NULL);
   pthread_detach(req_thread);
   pthread_detach(res_thread);
-  std::cout << "main: threads joined" << std::endl;
+  std::cout << "<<<<<<<<<<<<<< threads joined" << std::endl;
 }
 
 void test_time()
@@ -243,36 +250,35 @@ test_detach()
     ZmqMessage::OutOptions::CACHE_ON_BLOCK);
   out << "ghjfkjh" << 12 << ZmqMessage::NullMessage << ZmqMessage::Flush;
 
-  typedef std::auto_ptr<ZmqMessage::Multipart> MsgPtr;
-  MsgPtr p(out.detach());
+  typedef std::auto_ptr<ZmqMessage::Multipart> MultipartPtr;
+  MultipartPtr p(out.detach());
   assert(p->size() == 3);
   assert(ZmqMessage::get_string((*p)[1]) == "12");
+}
 
-  MsgPtr p2(p->detach());
-  assert(p->size() == 3);
-  assert(!p->has_part(0));
-  assert(!p->has_part(1));
-  assert(!p->has_part(2));
-
-  assert(p2->size() == 3);
-  assert(ZmqMessage::get_string((*p2)[1]) == "12");
+template <typename Storage>
+void
+test_for_storage()
+{
+  test<Storage, ZmqMessage::SimpleRouting, ZMQ_REQ, ZmqMessage::SimpleRouting, ZMQ_REP>(
+    "simple routing");
+  test<Storage, ZmqMessage::SimpleRouting, ZMQ_REQ, ZmqMessage::XRouting, ZMQ_XREP>(
+    "simple to X routing");
+  test<Storage, ZmqMessage::XRouting, ZMQ_XREQ, ZmqMessage::SimpleRouting, ZMQ_REP>(
+    "X to simple routing");
+  test<Storage, ZmqMessage::XRouting, ZMQ_XREQ, ZmqMessage::XRouting, ZMQ_XREP>(
+    "X to X routing");
 }
 
 int main()
 {
-  zmq::context_t ctx(1);
+  std::cout << "\n-----------\nmain: storage StackPartsStorage:\n------------" << std::endl;
+  test_for_storage<ZmqMessage::StackPartsStorage<ARRAY_LEN(req_parts)> >();
 
-  std::cout << "main: testing simple routing" << std::endl;
+  std::cout << "\n-----------\nmain: storage DynamicPartsStorage:\n------------" << std::endl;
+  test_for_storage<ZmqMessage::DynamicPartsStorage<> >();
 
-  test<ZmqMessage::SimpleRouting, ZMQ_REQ, ZmqMessage::SimpleRouting, ZMQ_REP>(
-    ctx, "simple routing");
-  test<ZmqMessage::SimpleRouting, ZMQ_REQ, ZmqMessage::XRouting, ZMQ_XREP>(
-    ctx, "simple to X routing");
-  test<ZmqMessage::XRouting, ZMQ_XREQ, ZmqMessage::SimpleRouting, ZMQ_REP>(
-    ctx, "X to simple routing");
-  test<ZmqMessage::XRouting, ZMQ_XREQ, ZmqMessage::XRouting, ZMQ_XREP>(
-    ctx, "X to X routing");
-
+  std::cout << "\n-----------\nmain: small tests:\n------------" << std::endl;
   //small tests
   test_time();
   test_detach();

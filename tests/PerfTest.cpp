@@ -27,7 +27,6 @@
 #define ZMQMESSAGE_STRING_CLASS StringFace
 
 #include "ZmqMessage.hpp"
-
 #ifdef HEADERONLY
 # include "ZmqMessageImpl.hpp"
 #endif
@@ -38,10 +37,16 @@ char* endpoint_raw = "inproc://simple-test-raw";
 char* endpoint_mes = "inproc://simple-test-mes";
 
 const char PART1[] = "01234567890"; //10b
-const char PART2[] = "aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee"; //50b
+const char PART2[] = "aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeaaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee"; //100b
 const char PART3[] = "aaaaaaaaaabbbbbbbbbbccccccccccdddddddddd"; //40b
 
 const char* req_parts[] = {"part1", "part2", "part3"};
+
+typedef ZmqMessage::StackPartsStorage<ARRAY_LEN(req_parts)> ReqStorage;
+typedef ZmqMessage::StackPartsStorage<1> ResStorage;
+
+//typedef ZmqMessage::DynamicPartsStorage<> ReqStorage;
+//typedef ReqStorage ResStorage;
 
 const size_t ITERS = 100000;
 
@@ -88,7 +93,7 @@ multipart_sender(zmq::socket_t& s)
       << StringFace(PART3, ARRAY_LEN(PART3)-1)
       << ZmqMessage::Flush;
 
-    ZmqMessage::Incoming<ZmqMessage::SimpleRouting> incoming(s);
+    ZmqMessage::Incoming<ZmqMessage::SimpleRouting, ResStorage> incoming(s);
 
     incoming.receive(1, true);
 
@@ -137,10 +142,9 @@ multipart_receiver(void* arg)
 
   for (size_t i = 0; i < ITERS; ++i)
   {
-    ZmqMessage::Incoming<ZmqMessage::SimpleRouting> incoming(s);
-    incoming.reserve(3);
+    ZmqMessage::Incoming<ZmqMessage::SimpleRouting, ReqStorage> incoming(s);
 
-    incoming.receive(3, req_parts, true);
+    incoming.receive(ARRAY_LEN(req_parts), req_parts, true);
 
     StringFace s1, s2, s3;
 

@@ -1,7 +1,7 @@
 /**
  * @file Config.hpp
  * @copyright Copyright (c) 2010-2011 Phorm, Inc.
- * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
+ * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html
  * @author Andrey Skryabin <andrew@zmqmessage.org>, et al.
  *
  * @brief Basic compile time configurations for ZmqMessage library
@@ -92,6 +92,49 @@
  */
 #ifndef ZMQMESSAGE_LOG_TERM
 #define ZMQMESSAGE_LOG_TERM std::endl
+#endif
+
+/**
+ * @def ZMQMESSAGE_DYNAMIC_DEFAULT_CAPACITY
+ * Initial storage capacity to store received parts.
+ * Used for DynamicPartsStorage as size of initial buffer.
+ */
+#ifndef ZMQMESSAGE_DYNAMIC_DEFAULT_CAPACITY
+#define ZMQMESSAGE_DYNAMIC_DEFAULT_CAPACITY 10
+#endif
+
+/**
+ * @def ZMQMESSAGE_ROUTING_CAPACITY
+ * Storage capacity to store routing parts for XRouting,
+ * including null message.
+ * For StackPartsStorage it's maximum capacity.
+ * For DynamicPartsStorage it's initially allocated parts number.
+ */
+#ifndef ZMQMESSAGE_ROUTING_CAPACITY
+#define ZMQMESSAGE_ROUTING_CAPACITY 5
+#endif
+
+/**
+ * @def ZMQMESSAGE_ROUTING_STORAGE
+ * Storage type to store routing parts for XRouting,
+ * including null message.
+ * May be:
+ * - \ref StackPartsStorage
+ *   @code
+ *   StackPartsStorage<N>
+ *   @endcode
+ *   where N is maximum capacity, say \ref ZMQMESSAGE_ROUTING_CAPACITY
+ * .
+ * - \ref DynamicPartsStorage
+ *   @code
+ *   DynamicPartsStorage<Allocator=std::allocator<Part> >
+ *   @endcode
+ * .
+ */
+#ifndef ZMQMESSAGE_ROUTING_STORAGE
+#define ZMQMESSAGE_ROUTING_STORAGE \
+  ::ZmqMessage::StackPartsStorage< ZMQMESSAGE_ROUTING_CAPACITY >
+//  ::ZmqMessage::DynamicPartsStorage<std::allocator<::ZmqMessage::Part> >
 #endif
 
 /**
