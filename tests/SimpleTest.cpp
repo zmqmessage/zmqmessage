@@ -22,6 +22,8 @@
 
 #include <string>
 
+#define ZMQMESSAGE_DYNAMIC_DEFAULT_CAPACITY 2
+
 #include "ZmqMessage.hpp"
 
 #ifdef HEADERONLY

@@ -24,21 +24,26 @@ namespace ZmqMessage
       using PartsStorage::size_;
 
       /**
-       * Empty parts storage. Used in release
+       * Empty parts storage. Used in PartsStorage::detach
        */
       MultipartContainer() :
         Multipart(PartsStorage::parts_addr(), &size_)
       {}
 
+      //to call MultipartContainer() from detach
+      template <typename Allocator>
+      friend class ::ZmqMessage::DynamicPartsStorage;
+
       friend class ::ZmqMessage::Sink;
 
     protected:
       explicit
-      MultipartContainer(size_t capacity) :
-        PartsStorage(capacity),
+      MultipartContainer(typename PartsStorage::StorageArg arg) :
+        PartsStorage(arg),
         Multipart(PartsStorage::parts_addr(), &size_)
       {}
 
+      inline
       Part*
       next()
       {

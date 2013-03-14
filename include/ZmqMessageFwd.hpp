@@ -19,7 +19,7 @@ namespace ZmqMessage
   template <size_t N>
   class StackPartsStorage;
 
-  template <typename Allocator>
+  template <typename Allocator = std::allocator<Part> >
   class DynamicPartsStorage;
 
   //routing policies

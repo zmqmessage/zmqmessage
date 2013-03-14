@@ -69,24 +69,16 @@ namespace ZmqMessage
     Skip<RoutingPolicy, PartsStorage>(SelfType&);
 
   public:
-    /**
-     * @param sock source socket to receive from
-     */
-    explicit
-    Incoming(zmq::socket_t& sock) :
-      ContainerType(PartsStorage::default_capacity),
-      src_(sock), is_terminal_(false),
-      cur_extract_idx_(0), binary_mode_(false),
-      receive_observer_(0)
-    {
-    }
+
+    typedef typename PartsStorage::StorageArg StorageArg;
 
     /**
      * @param sock source socket to receive from
-     * @param expected_parts_num Makes sense for dynamic multipart containers.
+     * @param arg Storage-dependent argument, such as initial storage capacity
      */
-    Incoming(zmq::socket_t& sock, size_t expected_parts_num) :
-      ContainerType(expected_parts_num),
+    Incoming(zmq::socket_t& sock,
+      StorageArg arg = PartsStorage::default_storage_arg) :
+      ContainerType(arg),
       src_(sock), is_terminal_(false),
       cur_extract_idx_(0), binary_mode_(false),
       receive_observer_(0)

@@ -55,7 +55,7 @@ namespace ZmqMessage
   class XRouting : private ZMQMESSAGE_ROUTING_STORAGE
   {
   protected:
-    XRouting() : ZMQMESSAGE_ROUTING_STORAGE(ZMQMESSAGE_ROUTING_CAPACITY)
+    XRouting() : ZMQMESSAGE_ROUTING_STORAGE(Private::RoutingStorageTag())
     {}
 
     void

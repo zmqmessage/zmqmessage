@@ -182,6 +182,16 @@ namespace ZmqMessage
     do_send_one(Part& msg, bool last) throw(ZmqErrorType);
 
     bool
+    do_send_one_non_strict(Part& msg, bool last) throw (ZmqErrorType);
+
+    inline
+    int
+    get_send_flags(bool last) const;
+
+    void
+    notify_on_send(Part& msg, int flag);
+
+    bool
     try_send_first_cached(bool last) throw(ZmqErrorType);
 
     void

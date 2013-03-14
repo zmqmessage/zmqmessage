@@ -48,6 +48,14 @@ namespace ZmqMessage
   {}
 
   template <typename Allocator>
+  DynamicPartsStorage<Allocator>::DynamicPartsStorage(
+    Private::RoutingStorageTag tag) :
+    parts_(Allocator::allocate(ZMQMESSAGE_ROUTING_CAPACITY)),
+    capacity_(ZMQMESSAGE_ROUTING_CAPACITY),
+    size_(0)
+  {}
+
+  template <typename Allocator>
   DynamicPartsStorage<Allocator>::DynamicPartsStorage() :
     parts_(0),
     capacity_(0),

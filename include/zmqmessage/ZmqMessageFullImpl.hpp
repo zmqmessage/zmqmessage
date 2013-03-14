@@ -225,10 +225,54 @@ namespace ZmqMessage
     Part& msg, bool last)
     throw (ZmqErrorType)
   {
+    const int flags = get_send_flags(last);
+    notify_on_send(msg, flags);
+
+    send_msg(dst_, msg.msg(), flags);
+
+    if (pending_routing_parts_ > 0)
+    {
+      --pending_routing_parts_;
+    }
+  }
+
+  bool
+  Sink::do_send_one_non_strict(
+    Part& msg, bool last)
+    throw (ZmqErrorType)
+  {
+    const int flags = get_send_flags(last);
+    notify_on_send(msg, flags);
+
+    bool ok = false;
+    try
+    {
+      ok = dst_.send(msg, flags);
+    }
+    catch (const zmq::error_t& e)
+    {
+      throw_zmq_exception(e);
+    }
+
+    if (ok && pending_routing_parts_ > 0)
+    {
+      --pending_routing_parts_;
+    }
+    return ok;
+  }
+
+  int
+  Sink::get_send_flags(bool last) const
+  {
     int flag = 0;
     if (!last) flag |= ZMQ_SNDMORE;
     if (options_ & OutOptions::NONBLOCK) flag |= ZMQ_NOBLOCK;
+    return flag;
+  }
 
+  void
+  Sink::notify_on_send(Part& msg, int flag)
+  {
     if (send_observer_ && pending_routing_parts_ == 0)
     {
       send_observer_->on_send_part(msg.msg());
@@ -239,13 +283,6 @@ namespace ZmqMessage
       << ZMQMESSAGE_STRING_CLASS((const char*)msg.msg().data(),
         std::min(msg.msg().size(), static_cast<size_t>(256)))
       << ", flag = " << flag << ZMQMESSAGE_LOG_TERM;
-
-    send_msg(dst_, msg.msg(), flag);
-
-    if (pending_routing_parts_ > 0)
-    {
-      --pending_routing_parts_;
-    }
   }
 
   bool
@@ -253,59 +290,60 @@ namespace ZmqMessage
   {
     assert(state_ == NOTSENT);
     assert(cached_.valid());
-    bool ret = true;
+    bool blocked = false;
+
     try
     {
       if (options_ & OutOptions::EMULATE_BLOCK_SENDS)
       {
-        errno = EAGAIN;
+        blocked = true;
         ZMQMESSAGE_LOG_STREAM
           << "Emulating blocking send!" << ZMQMESSAGE_LOG_TERM;
-        throw_zmq_error("Emulating blocking send");
       }
       else
       {
-        do_send_one(cached_, last);
-        state_ = SENDING;
+        blocked = !do_send_one_non_strict(cached_, last);
       }
     }
     catch (const ZmqErrorType& e)
     {
-      ret = false;
-      if (errno == EAGAIN)
+      cached_.mark_invalid();
+      ZMQMESSAGE_LOG_STREAM <<
+        "Cannot send first outgoing message: error: " << e.what() <<
+        ZMQMESSAGE_LOG_TERM;
+      throw;
+    }
+
+    if (blocked)
+    {
+      if (options_ & OutOptions::CACHE_ON_BLOCK)
       {
-        if (options_ & OutOptions::CACHE_ON_BLOCK)
-        {
-          ZMQMESSAGE_LOG_STREAM
-            << "Cannot send first outgoing message: would block: start caching"
-            << ZMQMESSAGE_LOG_TERM;
-          state_ = QUEUEING;
-          outgoing_queue_.reset(new QueueContainer(init_queue_len));
-          add_to_queue(cached_);
-        }
-        else if (options_ & OutOptions::DROP_ON_BLOCK)
-        {
-          ZMQMESSAGE_LOG_STREAM <<
-            "Cannot send first outgoing message: would block: dropping" <<
-            ZMQMESSAGE_LOG_TERM;
-          state_ = DROPPING;
-        }
-        else
-        {
-          throw;
-        }
+        ZMQMESSAGE_LOG_STREAM
+          << "Cannot send first outgoing message: would block: start caching"
+          << ZMQMESSAGE_LOG_TERM;
+        state_ = QUEUEING;
+        outgoing_queue_.reset(new QueueContainer(init_queue_len));
+        add_to_queue(cached_);
+      }
+      else if (options_ & OutOptions::DROP_ON_BLOCK)
+      {
+        ZMQMESSAGE_LOG_STREAM <<
+          "Cannot send first outgoing message: would block: dropping" <<
+          ZMQMESSAGE_LOG_TERM;
+        state_ = DROPPING;
       }
       else
       {
-        cached_.mark_invalid();
         ZMQMESSAGE_LOG_STREAM <<
-          "Cannot send first outgoing message: error: " << e.what() <<
+          "Cannot send first outgoing message: would block: throwing error" <<
           ZMQMESSAGE_LOG_TERM;
-
-        throw;
+        throw_zmq_exception(zmq::error_t());
       }
+      return false;
     }
-    return ret;
+
+    state_ = SENDING;
+    return true;
   }
 
   void
