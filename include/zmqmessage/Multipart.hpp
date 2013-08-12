@@ -20,7 +20,7 @@ namespace ZmqMessage
    * Does not actually own parts, just provides access to them.
    * Not aware of parts storage scheme.
    */
-  class Multipart : private Private::NonCopyable
+  class ZMQMESSAGE_DLL_PUBLIC Multipart : private Private::NonCopyable
   {
   private:
     Part** parts_ptr_; //!< non-null
@@ -76,7 +76,7 @@ namespace ZmqMessage
      * @brief Input iterator to iterate over message parts
      */
     template <typename T>
-    class iterator
+    class ZMQMESSAGE_DLL_PUBLIC iterator
     {
     public:
       typedef T value_type;
@@ -86,6 +86,7 @@ namespace ZmqMessage
       typedef std::input_iterator_tag iterator_category;
 
     private:
+      ZMQMESSAGE_DLL_LOCAL
       iterator(const Multipart& m, bool binary_mode, bool end = false) :
       multipart_(&m), idx_(end ? m.size() : 0),
       binary_mode_(binary_mode)
@@ -93,6 +94,7 @@ namespace ZmqMessage
         set_cur();
       }
 
+      ZMQMESSAGE_DLL_LOCAL
       iterator(const Multipart& m, size_t idx, bool binary_mode) :
         multipart_(&m), idx_(idx), binary_mode_(binary_mode)
       {
@@ -100,6 +102,7 @@ namespace ZmqMessage
       }
 
       template <typename U>
+      ZMQMESSAGE_DLL_LOCAL
       iterator(const iterator<U>& rhs) :
         multipart_(rhs.multipart_), idx_(rhs.idx),
         binary_mode_(rhs.binary_mode)
@@ -156,6 +159,7 @@ namespace ZmqMessage
       T cur_;
       bool binary_mode_; //non-const to use in assignment
 
+      ZMQMESSAGE_DLL_LOCAL
       inline
       bool
       end() const
@@ -163,6 +167,7 @@ namespace ZmqMessage
         return idx_ >= multipart_->size();
       }
 
+      ZMQMESSAGE_DLL_LOCAL
       bool
       equal(const iterator<T>& rhs) const
       {
@@ -170,6 +175,7 @@ namespace ZmqMessage
           (multipart_ == rhs.multipart_ && idx_ == rhs.idx_);
       }
 
+      ZMQMESSAGE_DLL_LOCAL
       void
       set_cur();
     };
@@ -272,7 +278,7 @@ namespace ZmqMessage
       ptr->move(&(part.msg()));
       return ptr;
     }
-    };
+  };
 }
 
 #endif /* ZMQMESSAGE_MULTIPART_HPP_ */

@@ -15,6 +15,7 @@ namespace ZmqMessage
   /**
    * Send given message to destination socket
    */
+  ZMQMESSAGE_DLL_PUBLIC
   void
   send(zmq::socket_t& sock, Multipart& multipart, bool nonblock,
     SendObserver* send_observer = 0)

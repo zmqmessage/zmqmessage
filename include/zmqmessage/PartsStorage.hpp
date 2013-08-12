@@ -16,19 +16,19 @@ namespace ZmqMessage
 {
   namespace Private
   {
-    struct RoutingStorageTag {};
+    struct ZMQMESSAGE_DLL_LOCAL RoutingStorageTag {};
   }
 
   /**
    * @brief Allocates ZMQ messages on stack, fixed capacity.
    */
   template <size_t N>
-  class StackPartsStorage : private Private::NonCopyable
+  class ZMQMESSAGE_DLL_PUBLIC StackPartsStorage : private Private::NonCopyable
   {
   public:
     static const size_t default_capacity = N;
 
-    struct Empty {};
+    struct ZMQMESSAGE_DLL_LOCAL Empty {};
 
     typedef Empty StorageArg;
     static const Empty default_storage_arg;
@@ -41,11 +41,13 @@ namespace ZmqMessage
 
   protected:
 
+    ZMQMESSAGE_DLL_LOCAL
     explicit
     StackPartsStorage(Private::RoutingStorageTag ignored) :
       size_(0), parts_p_(&(parts_[0]))
     {}
 
+    ZMQMESSAGE_DLL_LOCAL
     explicit
     StackPartsStorage(StorageArg ignored) :
       size_(0), parts_p_(&(parts_[0]))
@@ -54,6 +56,7 @@ namespace ZmqMessage
     /**
      * @return pointer to next part, 0 if limit is reached
      */
+    ZMQMESSAGE_DLL_LOCAL
     inline
     Part*
     next()
@@ -61,6 +64,7 @@ namespace ZmqMessage
       return (size_ < N) ? &(parts_[size_++]) : static_cast<Part*>(0);
     }
 
+    ZMQMESSAGE_DLL_LOCAL
     inline
     Part**
     parts_addr()
@@ -72,12 +76,13 @@ namespace ZmqMessage
   /**
    * @brief Use external buffer with allocated ZMQ messages
    */
-  class ExternalPartsStorage : private Private::NonCopyable
+  class ZMQMESSAGE_DLL_PUBLIC ExternalPartsStorage :
+  private Private::NonCopyable
   {
   public:
     static const size_t default_capacity = 0;
 
-    class Buffer
+    class ZMQMESSAGE_DLL_LOCAL Buffer
     {
     private:
       Part* const parts_;
@@ -105,6 +110,7 @@ namespace ZmqMessage
     /**
      * Undefined, since Routing storage on external buffer is not supported
      */
+    ZMQMESSAGE_DLL_LOCAL
     explicit
     ExternalPartsStorage(Private::RoutingStorageTag ignored);
 
@@ -135,7 +141,8 @@ namespace ZmqMessage
    * @brief Allocates ZMQ messages using allocator, grows automatically
    */
   template <typename Allocator>
-  class DynamicPartsStorage : private Allocator, private Private::NonCopyable
+  class ZMQMESSAGE_DLL_PUBLIC DynamicPartsStorage :
+    private Allocator, private Private::NonCopyable
   {
   public:
     typedef Allocator PartsAllocatorType;
@@ -161,22 +168,28 @@ namespace ZmqMessage
     /**
      * @return pointer to next part
      */
+    ZMQMESSAGE_DLL_LOCAL
     Part*
     next();
 
+    ZMQMESSAGE_DLL_LOCAL
     explicit
     DynamicPartsStorage(Private::RoutingStorageTag tag);
 
+    ZMQMESSAGE_DLL_LOCAL
     explicit
     DynamicPartsStorage(StorageArg capacity);
 
     /**
      * Empty storage, no allocations
      */
+    ZMQMESSAGE_DLL_LOCAL
     DynamicPartsStorage();
 
+    ZMQMESSAGE_DLL_LOCAL
     ~DynamicPartsStorage();
 
+    ZMQMESSAGE_DLL_LOCAL
     inline
     Part**
     parts_addr()

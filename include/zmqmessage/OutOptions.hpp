@@ -19,7 +19,7 @@ namespace ZmqMessage
    * Also it can hold SendObserver pointer to be set to Outgoing object.
    * Needed for convenient creation of @c Outgoing object.
    */
-  struct OutOptions
+  struct ZMQMESSAGE_DLL_PUBLIC OutOptions
   {
     /**
      * send nonblockingly

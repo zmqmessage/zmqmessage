@@ -17,6 +17,7 @@ namespace ZmqMessage
    * When passed to @c Outgoing (operator <<)
    * creates null (empty) message part
    */
+  ZMQMESSAGE_DLL_PUBLIC
   Sink&
   NullMessage(Sink& out);
 
@@ -28,6 +29,7 @@ namespace ZmqMessage
    * Also, usual checking that current part exists is performed.
    */
   template<typename RoutingPolicy, typename PartsStorage>
+  ZMQMESSAGE_DLL_PUBLIC
   Incoming<RoutingPolicy, PartsStorage>&
   Skip(Incoming<RoutingPolicy, PartsStorage>& in);
 
@@ -36,6 +38,7 @@ namespace ZmqMessage
    *
    * Manipulator to finally flush (send/enqueue) the outgoing message.
    */
+  ZMQMESSAGE_DLL_PUBLIC
   Sink&
   Flush(Sink& out);
 
@@ -46,6 +49,7 @@ namespace ZmqMessage
    * See \ref zm_modes "modes"
    */
   template<typename StreamAlike>
+  ZMQMESSAGE_DLL_PUBLIC
   StreamAlike&
   Binary(StreamAlike& out)
   {
@@ -60,6 +64,7 @@ namespace ZmqMessage
    * See \ref zm_modes "modes"
    */
   template<typename StreamAlike>
+  ZMQMESSAGE_DLL_PUBLIC
   StreamAlike&
   Text(StreamAlike& out)
   {

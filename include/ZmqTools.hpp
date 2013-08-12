@@ -27,6 +27,7 @@ namespace ZmqMessage
    * @param t will contain the COPY of message contents
    */
   template <typename T>
+  ZMQMESSAGE_DLL_PUBLIC
   inline
   void
   get_bin(zmq::message_t& message, T& t)
@@ -40,6 +41,7 @@ namespace ZmqMessage
    * @param message zmq message
    */
   template <typename T>
+  ZMQMESSAGE_DLL_PUBLIC
   inline T
   get_bin(zmq::message_t& message)
   {
@@ -54,6 +56,7 @@ namespace ZmqMessage
    * @tparam T class supporting string operations (@see Private::IsStr)
    */
   template <typename T>
+  ZMQMESSAGE_DLL_PUBLIC
   inline
   T
   get(zmq::message_t& message,
@@ -71,6 +74,7 @@ namespace ZmqMessage
    * @return the converted content
    */
   template <typename T>
+  ZMQMESSAGE_DLL_PUBLIC
   inline
   T
   get(zmq::message_t& message,
@@ -91,6 +95,7 @@ namespace ZmqMessage
    * @tparam T containing raw_mark typedef (@see Private::IsRaw)
    */
   template <typename T>
+  ZMQMESSAGE_DLL_PUBLIC
   inline
   T
   get(zmq::message_t& message,
@@ -108,6 +113,7 @@ namespace ZmqMessage
    * @tparam T class supporting string operations (@see Private::IsStr)
    */
   template <typename T>
+  ZMQMESSAGE_DLL_PUBLIC
   inline
   void
   get(zmq::message_t& message, T& t,
@@ -125,6 +131,7 @@ namespace ZmqMessage
    * @return the converted content
    */
   template <typename T>
+  ZMQMESSAGE_DLL_PUBLIC
   inline
   void
   get(zmq::message_t& message, T& t,
@@ -143,6 +150,7 @@ namespace ZmqMessage
    * @tparam T containing raw_mark typedef (@see Private::IsRaw)
    */
   template <typename T>
+  ZMQMESSAGE_DLL_PUBLIC
   inline
   void
   get(zmq::message_t& message, T& t,
@@ -157,6 +165,7 @@ namespace ZmqMessage
    * or character stream (as determined by binary_mode parameter).
    */
   template <typename T>
+  ZMQMESSAGE_DLL_PUBLIC
   inline
   T
   get(zmq::message_t& message, bool binary_mode)
@@ -170,6 +179,7 @@ namespace ZmqMessage
    * or character stream (as determined by binary_mode parameter).
    */
   template <typename T>
+  ZMQMESSAGE_DLL_PUBLIC
   inline
   void
   get(zmq::message_t& message, T& t,  bool binary_mode)
@@ -180,7 +190,9 @@ namespace ZmqMessage
   /**
    * Return memory region as RawMessage. No copying takes place.
    */
-  inline RawMessage
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  RawMessage
   get_raw(zmq::message_t& message)
   {
     return RawMessage(message.data(), message.size());
@@ -190,7 +202,9 @@ namespace ZmqMessage
    * Extract string class from text message (possibly not zero-terminated)
    */
   template <typename T>
-  inline T
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  T
   get_string(zmq::message_t& message)
   {
     return T(static_cast<char*>(message.data()), message.size());
@@ -199,7 +213,9 @@ namespace ZmqMessage
   /**
    * @overload
    */
-  inline ZMQMESSAGE_STRING_CLASS
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  ZMQMESSAGE_STRING_CLASS
   get_string(zmq::message_t& message)
   {
     return get_string<ZMQMESSAGE_STRING_CLASS>(message);
@@ -211,7 +227,9 @@ namespace ZmqMessage
    * (possibly not zero-terminated)
    */
   template <typename T>
-  inline T
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  T
   get_string(zmq::message_t& message, size_t limit)
   {
     return T(
@@ -222,7 +240,9 @@ namespace ZmqMessage
   /**
    * @overload
    */
-  inline ZMQMESSAGE_STRING_CLASS
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  ZMQMESSAGE_STRING_CLASS
   get_string(zmq::message_t& message, size_t limit)
   {
     return get_string<ZMQMESSAGE_STRING_CLASS>(message, limit);
@@ -231,6 +251,7 @@ namespace ZmqMessage
   /**
    * Get timestamp from TEXT message, converting ASCII string to unsigned long
    */
+  ZMQMESSAGE_DLL_PUBLIC
   time_t
   get_time(zmq::message_t& message);
 
@@ -238,7 +259,9 @@ namespace ZmqMessage
    * Compare message contents to specified memory region.
    * @return like @c memcmp
    */
-  inline int
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  int
   msgcmp(zmq::message_t& message1, zmq::message_t& message2)
   {
     int ret = memcmp(message1.data(), message2.data(),
@@ -250,7 +273,9 @@ namespace ZmqMessage
    * Compare message contents to specified memory region.
    * @return like @c memcmp
    */
-  inline int
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  int
   msgcmp(zmq::message_t& message, const char* str, size_t len)
   {
     int ret = memcmp(message.data(), str, std::min(message.size(), len));
@@ -261,7 +286,9 @@ namespace ZmqMessage
    * Compare message contents to specified zero-terminated C string.
    * @return like @c memcmp
    */
-  inline int
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  int
   msgcmp(zmq::message_t& message, const char* str)
   {
     return msgcmp(message, str, strlen(str));
@@ -272,7 +299,9 @@ namespace ZmqMessage
    * @return like @c memcmp
    */
   template <typename T>
-  inline int
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  int
   msgcmp(zmq::message_t& message, const T& str,
     typename Private::EnableIf<Private::IsStr<T>::value>::type* = 0)
   {
@@ -284,6 +313,7 @@ namespace ZmqMessage
    * (created duplicate of buffer will be owned by zmq message
    * and will be destroyed by it).
    */
+  ZMQMESSAGE_DLL_PUBLIC
   void
   init_msg(const void* t, size_t sz, zmq::message_t& msg);
 
@@ -292,7 +322,9 @@ namespace ZmqMessage
    * No null terminator (if any) appended to message.
    */
   template <class T>
-  inline void
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  void
   init_msg(const T& t, zmq::message_t& msg,
     typename Private::EnableIf<Private::IsStr<T>::value>::type* = 0)
   {
@@ -304,7 +336,9 @@ namespace ZmqMessage
    * written to output stream.
    */
   template <class T>
-  inline void
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  void
   init_msg(const T& t, zmq::message_t& msg,
            typename Private::DisableIf<Private::IsStr<T>::value>::type* = 0,
            typename Private::DisableIf<Private::IsRaw<T>::value>::type* = 0)
@@ -321,7 +355,9 @@ namespace ZmqMessage
    * For types explicitly marked as raw (containing raw_mark typedef)
    */
   template <class T>
-  inline void
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  void
   init_msg(const T& t, zmq::message_t& msg,
            typename Private::DisableIf<Private::IsStr<T>::value>::type* = 0,
            typename Private::EnableIf<Private::IsRaw<T>::value>::type* = 0)
@@ -332,7 +368,9 @@ namespace ZmqMessage
   /**
    * Initialize zmq message with zero-terminated string
    */
-  inline void
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  void
   init_msg(const char* t, zmq::message_t& msg)
   {
     init_msg(t, strlen(t), msg);
@@ -343,7 +381,9 @@ namespace ZmqMessage
    * For elementary types or properly aligned PODs.
    */
   template <class T>
-  inline void
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  void
   init_msg_bin(const T& t, zmq::message_t& msg)
   {
     init_msg(&t, sizeof(T), msg);
@@ -355,7 +395,9 @@ namespace ZmqMessage
    * (depending on binary_mode parameter).
    */
   template <class T>
-  inline void
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  void
   init_msg(const T& t, zmq::message_t& msg, bool binary_mode)
   {
     binary_mode ? init_msg_bin(t, msg) : init_msg(t, msg);
@@ -366,7 +408,9 @@ namespace ZmqMessage
    * throw exception: either unwrapped zmq::error_t or wrapped exception,
    * depending on configuration
    */
-  inline void
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  void
   throw_zmq_exception(const zmq::error_t& e)
     throw(ZmqErrorType)
   {
@@ -380,7 +424,9 @@ namespace ZmqMessage
   /**
    * Receive message part from socket
    */
-  inline void
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  void
   recv_msg(zmq::socket_t& sock, zmq::message_t& msg,
     int flags = 0) throw(ZmqErrorType)
   {
@@ -401,7 +447,9 @@ namespace ZmqMessage
    * Try to receive message part from socket.
    * @return false if would block
    */
-  inline bool
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  bool
   try_recv_msg(zmq::socket_t& sock, zmq::message_t& msg,
     int flags = ZMQ_NOBLOCK) throw(ZmqErrorType)
   {
@@ -420,7 +468,9 @@ namespace ZmqMessage
   /**
    * Send message part to socket with specified flags
    */
-  inline void
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  void
   send_msg(zmq::socket_t& sock, zmq::message_t& msg, int flags)
     throw(ZmqErrorType)
   {
@@ -440,7 +490,9 @@ namespace ZmqMessage
   /**
    * Copy contents of one message part to another
    */
-  inline void
+  ZMQMESSAGE_DLL_PUBLIC
+  inline
+  void
   copy_msg(zmq::message_t& target, zmq::message_t& source)
     throw(ZmqErrorType)
   {
@@ -457,6 +509,7 @@ namespace ZmqMessage
   /**
    * Does specified socket has more messages to receive
    */
+  ZMQMESSAGE_DLL_PUBLIC
   bool
   has_more(zmq::socket_t& sock);
 
@@ -469,11 +522,11 @@ namespace ZmqMessage
    * even for 1st part
    * @return number of relayed parts
    */
+  ZMQMESSAGE_DLL_PUBLIC
   int
   relay_raw(zmq::socket_t& src, zmq::socket_t& dst,
     bool check_first_part = true);
 }
-
 
 #endif //ZMQMESSAGE_ZMQ_TOOLS_INCLUDED_
 

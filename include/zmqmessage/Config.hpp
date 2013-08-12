@@ -8,6 +8,7 @@
  */
 
 #include "zmq.hpp"
+#include "zmqmessage/dll.hpp"
 
 #ifndef ZMQMESSAGE_CONFIG_HPP_
 #define ZMQMESSAGE_CONFIG_HPP_
@@ -153,7 +154,8 @@
 namespace ZmqMessage
 {
   template <class Tag>
-  class DefaultExceptionTemplate : public std::logic_error
+  class ZMQMESSAGE_DLL_PUBLIC DefaultExceptionTemplate :
+    public std::logic_error
   {
   public:
     explicit DefaultExceptionTemplate (const std::string& arg) :
@@ -161,14 +163,14 @@ namespace ZmqMessage
   };
 }
 #define ZMQMESSAGE_EXCEPTION_MACRO(name) \
-  class name##_tag {}; \
+  class ZMQMESSAGE_DLL_PUBLIC name##_tag {}; \
   typedef ::ZmqMessage::DefaultExceptionTemplate<name##_tag> name
 #else
 namespace ZmqMessage
 {
   //make this type unusable
   template <class Tag>
-  class DefaultExceptionTemplate
+  class ZMQMESSAGE_DLL_LOCAL DefaultExceptionTemplate
   {
   private:
     DefaultExceptionTemplate() {}
@@ -203,7 +205,10 @@ namespace ZmqMessage
   ZMQMESSAGE_EXCEPTION_MACRO(ZmqException)
   ;
   typedef ZmqException ZmqErrorType;
-  inline void
+
+  ZMQMESSAGE_DLL_LOCAL
+  inline
+  void
   throw_zmq_error(const char* err)
   {
     throw ZmqException(err);

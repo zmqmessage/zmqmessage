@@ -17,7 +17,7 @@ namespace ZmqMessage
    * Observer will be notified when message parts are being received
    * and when the last message part is received.
    */
-  class ReceiveObserver
+  class ZMQMESSAGE_DLL_PUBLIC ReceiveObserver
   {
   public:
     /**
@@ -40,7 +40,7 @@ namespace ZmqMessage
    * Observer will be notified when message parts are being sent
    * and when the entire Sink has been flushed.
    */
-  class SendObserver
+  class ZMQMESSAGE_DLL_PUBLIC SendObserver
   {
   public:
     /**

@@ -1,7 +1,7 @@
 /**
  * @file NonCopyable.hpp
  * @copyright Copyright (c) 2010-2011 Phorm, Inc.
- * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
+ * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html
  * @author Andrey Skryabin <andrew@zmqmessage.org>, et al.
  *
  */
@@ -21,7 +21,7 @@ namespace ZmqMessage
      *   ...
      * };
      */
-    class NonCopyable
+    class ZMQMESSAGE_DLL_LOCAL NonCopyable
     {
     protected:
       NonCopyable() {}

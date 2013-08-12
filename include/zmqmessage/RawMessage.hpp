@@ -1,7 +1,7 @@
 /**
  * @file RawMessage.hpp
  * @copyright Copyright (c) 2010-2011 Phorm, Inc.
- * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
+ * @copyright GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html
  * @author Andrey Skryabin <andrew@zmqmessage.org>, et al.
  *
  */
@@ -20,7 +20,7 @@ namespace ZmqMessage
    * Otherwise, no copying will be performed,
    * the memory will be deleted by deleter
    */
-  struct RawMessage
+  struct ZMQMESSAGE_DLL_PUBLIC RawMessage
   {
     union
     {
@@ -29,13 +29,15 @@ namespace ZmqMessage
     } data;
     size_t sz;
     zmq::free_fn* deleter;
+    void* hint;
 
     /**
      * Take ownership on the memory region specified by data_p and sz_p.
      * ZMQ will delete it with deleter_p when sent.
      */
-    inline RawMessage(void* data_p, size_t sz_p, zmq::free_fn* deleter_p) :
-      sz(sz_p), deleter(deleter_p)
+    inline RawMessage(void* data_p, size_t sz_p,
+      zmq::free_fn* deleter_p, void* hint_p = 0) :
+      sz(sz_p), deleter(deleter_p), hint(hint_p)
     {
       data.ptr = data_p;
     }
@@ -44,7 +46,7 @@ namespace ZmqMessage
      * When sending, we will copy memory region specified by data_p and sz_p.
      */
     inline RawMessage(const void* data_p, size_t sz_p) :
-      sz(sz_p), deleter(0)
+      sz(sz_p), deleter(0), hint(0)
     {
       data.cptr = data_p;
     }

@@ -16,7 +16,7 @@ namespace ZmqMessage
      * Memory can be released.
      */
     template <typename Allocator>
-    class ScopedAlloc : private Allocator
+    class ZMQMESSAGE_DLL_LOCAL ScopedAlloc : private Allocator
     {
     private:
       typename Allocator::pointer mem_;

@@ -18,7 +18,7 @@ namespace ZmqMessage
   namespace Private
   {
     template <typename PartsStorage>
-    class MultipartContainer : public PartsStorage, public Multipart
+    class ZMQMESSAGE_DLL_LOCAL MultipartContainer : public PartsStorage, public Multipart
     {
     private:
       using PartsStorage::size_;

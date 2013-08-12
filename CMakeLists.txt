@@ -1,18 +1,44 @@
 # Copyright (c) 2010-2011 Phorm, Inc.
-# License: GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html 
+# License: GNU LGPL v 3.0, see http://www.gnu.org/licenses/lgpl-3.0-standalone.html
 # Author: Andrey Skryabin <andrew@zmqmessage.org>, et al.
 
 cmake_minimum_required(VERSION 2.6)
 
-set(CMAKE_CXX_FLAGS_DEBUG  "-g -Wall"
+SET(CMAKE_CXX_FLAGS "-Wall -fvisibility=hidden -DZMQMESSAGE_BUILDING_DLL"
+  CACHE
+  STRING "Flags used by the compiler during all builds"
+  )
+SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG"
+  CACHE
+  STRING "Flags used by the compiler during release with debug info builds"
+  )
+SET(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG"
+  CACHE
+  STRING "Flags used by the compiler during release builds"
+  )
+SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -g"
   CACHE
   STRING "Flags used by the compiler during debug builds"
   )
 
+SET(CMAKE_C_FLAGS ${CMAKE_CXX_FLAGS}
+  CACHE
+  STRING "Flags used by the compiler during all C builds"
+  )
+SET(CMAKE_C_FLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}
+  CACHE
+  STRING "Flags used by the compiler during release with debug info C builds"
+  )
+SET(CMAKE_C_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE}
+  CACHE
+  STRING "Flags used by the compiler during release C builds"
+  )
+SET(CMAKE_C_FLAGS_DEBUG  ${CMAKE_CXX_FLAGS_DEBUG}
+  CACHE
+  STRING "Flags used by the compiler during debug builds"
+  )
 
-
-# project(ZMQMESSAGE)
-
+project(ZMQMESSAGE)
 
 # additional cmake modules location path
 set(

@@ -20,7 +20,7 @@ namespace ZmqMessage
    * Routing policy for sending/receiving message through "not-X" ZMQ endpoints
    * (socket types PUSH, PULL, REQ, REP, PUB, SUB,...)
    */
-  class SimpleRouting
+  class ZMQMESSAGE_DLL_PUBLIC SimpleRouting
   {
   protected:
     inline void
@@ -52,7 +52,7 @@ namespace ZmqMessage
    * (socket types XREQ and XREP)
    */
 
-  class XRouting : private ZMQMESSAGE_ROUTING_STORAGE
+  class ZMQMESSAGE_DLL_PUBLIC XRouting : private ZMQMESSAGE_ROUTING_STORAGE
   {
   protected:
     XRouting() : ZMQMESSAGE_ROUTING_STORAGE(Private::RoutingStorageTag())

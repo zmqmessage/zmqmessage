@@ -30,7 +30,7 @@ namespace ZmqMessage
    * to avoid copying.
    */
   template <class RoutingPolicy>
-  class Outgoing : public Sink
+  class ZMQMESSAGE_DLL_PUBLIC Outgoing : public Sink
   {
   private:
 

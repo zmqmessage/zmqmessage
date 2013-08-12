@@ -200,7 +200,7 @@ namespace ZmqMessage
   {
     if (m.deleter)
     {
-      Part part(m.data.ptr, m.sz, m.deleter, 0);
+      Part part(m.data.ptr, m.sz, m.deleter, m.hint);
       send_owned(part);
     }
     else

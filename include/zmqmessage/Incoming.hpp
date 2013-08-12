@@ -25,7 +25,7 @@ namespace ZmqMessage
    * rules for receiving routing info.
    */
   template <class RoutingPolicy, class PartsStorage = DynamicPartsStorage<> >
-  class Incoming :
+  class ZMQMESSAGE_DLL_PUBLIC Incoming :
     private RoutingPolicy,
     public Private::MultipartContainer<PartsStorage>
   {
@@ -44,6 +44,7 @@ namespace ZmqMessage
 
     ReceiveObserver* receive_observer_;
 
+    ZMQMESSAGE_DLL_LOCAL
     void
     append_message_data(
       zmq::message_t& message, std::vector<char>& area) const;
@@ -52,9 +53,11 @@ namespace ZmqMessage
      * Fetches one message from src_, appends message to parts_.
      * @return if we have more messages on socket
      */
+    ZMQMESSAGE_DLL_LOCAL
     bool
     receive_one() throw(ZmqErrorType, MessageFormatError);
 
+    ZMQMESSAGE_DLL_LOCAL
     bool
     do_receive_msg(Part& part) throw(ZmqErrorType);
 

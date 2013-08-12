@@ -17,12 +17,13 @@ namespace ZmqMessage
    * After copying the initial object becomes invalid.
    * Objects may be stored by value in STL containers.
    */
-  class Part
+  class ZMQMESSAGE_DLL_PUBLIC Part
   {
   private:
     zmq_msg_t msg_;
     bool valid_; //has meaningful content
 
+    ZMQMESSAGE_DLL_LOCAL
     inline
     void
     init_empty()

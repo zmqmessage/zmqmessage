@@ -30,7 +30,7 @@ namespace ZmqMessage
    * on RoutingPolicy template parameter,
    * so it may be referenced as Sink class.
    */
-  class Sink : private Private::NonCopyable
+  class ZMQMESSAGE_DLL_PUBLIC Sink : private Private::NonCopyable
   {
   public:
     /**
@@ -38,7 +38,7 @@ namespace ZmqMessage
      * into outgoing message.
      */
     template <typename T>
-    class iterator
+    class ZMQMESSAGE_DLL_PUBLIC iterator
     {
     public:
       typedef T value_type;
@@ -48,7 +48,7 @@ namespace ZmqMessage
       typedef std::output_iterator_tag iterator_category;
 
     private:
-      class AssignProxy
+      class ZMQMESSAGE_DLL_LOCAL AssignProxy
       {
       public:
         AssignProxy(Sink& outgoing)
@@ -106,6 +106,7 @@ namespace ZmqMessage
     private:
       Sink& outgoing_;
 
+      ZMQMESSAGE_DLL_LOCAL
       bool
       equal(const iterator<T>& rhs) const
       {
@@ -175,25 +176,35 @@ namespace ZmqMessage
       throw(ZmqErrorType);
 
   private:
+    /**
+     * Default visibility here cause it's called from template operator <<
+     * which may be generated within external binary.
+     */
     void
     send_owned(Part& owned) throw(ZmqErrorType);
 
+    ZMQMESSAGE_DLL_LOCAL
     void
     do_send_one(Part& msg, bool last) throw(ZmqErrorType);
 
+    ZMQMESSAGE_DLL_LOCAL
     bool
     do_send_one_non_strict(Part& msg, bool last) throw (ZmqErrorType);
 
+    ZMQMESSAGE_DLL_LOCAL
     inline
     int
     get_send_flags(bool last) const;
 
+    ZMQMESSAGE_DLL_LOCAL
     void
     notify_on_send(Part& msg, int flag);
 
+    ZMQMESSAGE_DLL_LOCAL
     bool
     try_send_first_cached(bool last) throw(ZmqErrorType);
 
+    ZMQMESSAGE_DLL_LOCAL
     void
     add_to_queue(Part& part);
 
