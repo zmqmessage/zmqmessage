@@ -7,6 +7,8 @@
 #ifndef ZMQMESSAGE_OBSERVERS_HPP_
 #define ZMQMESSAGE_OBSERVERS_HPP_
 
+#include <zmqmessage/dll.hpp>
+
 namespace ZmqMessage
 {
   /**

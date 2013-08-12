@@ -8,6 +8,7 @@
 #define ZMQMESSAGE_MANIP_HPP_
 
 #include <ZmqMessageFwd.hpp>
+#include <zmqmessage/Config.hpp>
 
 namespace ZmqMessage
 {

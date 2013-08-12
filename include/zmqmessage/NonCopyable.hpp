@@ -9,6 +9,8 @@
 #ifndef ZMQMESSAGE_NONCOPYABLE_HPP_
 #define ZMQMESSAGE_NONCOPYABLE_HPP_
 
+#include <zmqmessage/dll.hpp>
+
 namespace ZmqMessage
 {
   namespace Private

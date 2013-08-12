@@ -7,6 +7,8 @@
 #ifndef ZMQMESSAGE_SCOPEDALLOC_HPP_
 #define ZMQMESSAGE_SCOPEDALLOC_HPP_
 
+#include <zmqmessage/Config.hpp>
+
 namespace ZmqMessage
 {
   namespace Private

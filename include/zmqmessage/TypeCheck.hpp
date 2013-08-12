@@ -10,6 +10,8 @@
 #ifndef ZMQMESSAGE_TYPECHECK_HPP_
 #define ZMQMESSAGE_TYPECHECK_HPP_
 
+#include <zmqmessage/Config.hpp>
+
 namespace ZmqMessage
 {
   namespace Private

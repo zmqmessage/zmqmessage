@@ -7,8 +7,8 @@
 #ifndef ZMQMESSAGE_OUTOPTIONS_HPP_
 #define ZMQMESSAGE_OUTOPTIONS_HPP_
 
-#include <zmq.hpp>
 #include <ZmqMessageFwd.hpp>
+#include <zmqmessage/dll.hpp>
 
 namespace ZmqMessage
 {

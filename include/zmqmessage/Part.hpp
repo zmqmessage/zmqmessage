@@ -7,7 +7,7 @@
 #ifndef ZMQMESSAGE_PART_HPP_
 #define ZMQMESSAGE_PART_HPP_
 
-#include "zmq.hpp"
+#include <zmqmessage/Config.hpp>
 
 namespace ZmqMessage
 {

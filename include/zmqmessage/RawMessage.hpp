@@ -9,6 +9,8 @@
 #ifndef ZMQMESSAGE_RAWMESSAGE_HPP_
 #define ZMQMESSAGE_RAWMESSAGE_HPP_
 
+#include <zmqmessage/Config.hpp>
+
 namespace ZmqMessage
 {
   /**
