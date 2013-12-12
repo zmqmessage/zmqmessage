@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <cassert>
 #include <cstring>
+#include <unistd.h>
 
 #include <string>
 
@@ -256,6 +257,48 @@ test_detach()
   assert(ZmqMessage::get_string((*p)[1]) == "12");
 }
 
+void* test_incoming_detach_sender(void* arg)
+{
+  zmq::context_t& ctx = *static_cast<zmq::context_t*>(arg);
+  zmq::socket_t s(ctx, ZMQ_PUSH);
+  s.connect("inproc://test_incoming_detach");
+
+  ZmqMessage::Outgoing<ZmqMessage::SimpleRouting> out(
+    s, ZmqMessage::OutOptions::DROP_ON_BLOCK);
+  out << "ghjfkjh" << 12 << ZmqMessage::NullMessage << ZmqMessage::Flush;
+  ::sleep(1);
+  return 0;
+}
+
+void
+test_incoming_detach()
+{
+  typedef ZmqMessage::Incoming<
+    ZmqMessage::SimpleRouting, ZmqMessage::DynamicPartsStorage<>
+  > Incoming;
+
+  zmq::context_t ctx(1);
+
+  zmq::socket_t s_in(ctx, ZMQ_PULL);
+  s_in.bind("inproc://test_incoming_detach");
+
+  pthread_t thr;
+  pthread_create(&thr, NULL, &test_incoming_detach_sender, &ctx);
+
+  ::sleep(1);
+
+  Incoming incoming(s_in);
+  incoming.receive_all();
+
+  ZmqMessage::Multipart* m = incoming.detach();
+  assert(m->size() == 3);
+
+  delete m;
+
+  pthread_join(thr, NULL);
+  pthread_detach(thr);
+}
+
 template <typename Storage>
 void
 test_for_storage()
@@ -282,5 +325,6 @@ int main()
   //small tests
   test_time();
   test_detach();
+  test_incoming_detach();
   return 0;
 }

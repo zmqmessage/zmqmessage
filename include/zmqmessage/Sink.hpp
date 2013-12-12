@@ -8,6 +8,7 @@
 #define ZMQMESSAGE_SINK_HPP_
 
 #include <memory>
+#include <climits>
 
 #include <ZmqMessageFwd.hpp>
 

@@ -29,8 +29,9 @@ namespace ZmqMessage
 
   namespace Private
   {
-    template<> const int TypeCheck<
-      MessageFormatError, NoSuchPartError, ZmqErrorType>::value = 1;
+    template<> int TypeCheck<
+      MessageFormatError, NoSuchPartError, ZmqErrorType
+    >::value ZMQMESSAGE_DLL_PUBLIC = 1;
   }
 }
 

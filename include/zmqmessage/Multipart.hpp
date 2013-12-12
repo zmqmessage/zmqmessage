@@ -11,6 +11,7 @@
 
 #include <zmqmessage/NonCopyable.hpp>
 #include <zmqmessage/Part.hpp>
+#include <memory>
 
 namespace ZmqMessage
 {

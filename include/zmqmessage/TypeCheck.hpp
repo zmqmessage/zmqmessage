@@ -27,7 +27,7 @@ namespace ZmqMessage
     struct ZMQMESSAGE_DLL_PUBLIC TypeCheck
     {
       //defined in shared library for correct types
-      static const int value;
+      static int value;
     };
 
     namespace

@@ -33,8 +33,8 @@
 
 #define ARRAY_LEN(arr) sizeof(arr)/sizeof((arr)[0])
 
-char* endpoint_raw = "inproc://simple-test-raw";
-char* endpoint_mes = "inproc://simple-test-mes";
+const char* endpoint_raw = "inproc://simple-test-raw";
+const char* endpoint_mes = "inproc://simple-test-mes";
 
 const char PART1[] = "01234567890"; //10b
 const char PART2[] = "aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeaaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeee"; //100b
@@ -175,7 +175,7 @@ main(int, char**)
   std::cout << "Testing raw..." << std::endl;
   start = clock();
 
-  pthread_create(&raw_receiver_tid, 0, raw_receiver, endpoint_raw);
+  pthread_create(&raw_receiver_tid, 0, raw_receiver, const_cast<char*>(endpoint_raw));
   raw_sender(raw_sender_s);
 
   pthread_join(raw_receiver_tid, 0);
@@ -195,7 +195,7 @@ main(int, char**)
   std::cout << "Testing multipart..." << std::endl;
   start = clock();
 
-  pthread_create(&multipart_receiver_tid, 0, multipart_receiver, endpoint_mes);
+  pthread_create(&multipart_receiver_tid, 0, multipart_receiver, const_cast<char*>(endpoint_mes));
   multipart_sender(multipart_sender_s);
 
   pthread_join(multipart_receiver_tid, 0);

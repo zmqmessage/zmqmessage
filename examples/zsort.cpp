@@ -8,6 +8,7 @@
  */
 #include <pthread.h>
 #include <vector>
+#include <iterator>
 
 #include <zmq.hpp>
 

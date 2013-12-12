@@ -7,6 +7,8 @@
  * Not-working example.
  */
 #include "pthread.h"
+#include "stdint.h"
+#include "unistd.h"
 
 #include "ZmqMessage.hpp"
 
