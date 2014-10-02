@@ -77,7 +77,7 @@ namespace ZmqMessage
    * @brief Use external buffer with allocated ZMQ messages
    */
   class ZMQMESSAGE_DLL_PUBLIC ExternalPartsStorage :
-  private Private::NonCopyable
+    private Private::NonCopyable
   {
   public:
     static const size_t default_capacity = 0;
