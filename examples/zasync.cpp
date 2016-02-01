@@ -116,8 +116,18 @@ async_task_processor(void*)
     zmq::socket_t s_req(ctx, ZMQ_PULL);
     zmq::socket_t s_res(ctx, ZMQ_PUSH);
     uint64_t one_lim = 1;
+#ifdef ZMQ_HWM
     s_req.setsockopt(ZMQ_HWM, &one_lim, sizeof(uint64_t));
+#else
+    s_req.setsockopt(ZMQ_SNDHWM, &one_lim, sizeof(uint64_t));
+    s_req.setsockopt(ZMQ_RCVHWM, &one_lim, sizeof(uint64_t));
+#endif
+#ifdef ZMQ_HWM
     s_res.setsockopt(ZMQ_HWM, &one_lim, sizeof(uint64_t));
+#else
+    s_res.setsockopt(ZMQ_SNDHWM, &one_lim, sizeof(uint64_t));
+    s_res.setsockopt(ZMQ_RCVHWM, &one_lim, sizeof(uint64_t));
+#endif
 
     s_req.connect(req_endpoint);
     s_res.connect(res_endpoint);
@@ -205,8 +215,19 @@ main(int, char**)
 
   zmq::socket_t s_req(ctx, ZMQ_PUSH);
   zmq::socket_t s_res(ctx, ZMQ_PULL);
+#ifdef ZMQ_HWM
   s_req.setsockopt(ZMQ_HWM, &message_queue_limit, sizeof(uint64_t));
+#else
+  s_req.setsockopt(ZMQ_SNDHWM, &message_queue_limit, sizeof(uint64_t));
+  s_req.setsockopt(ZMQ_RCVHWM, &message_queue_limit, sizeof(uint64_t));
+#endif
+#ifdef ZMQ_HWM
   s_res.setsockopt(ZMQ_HWM, &message_queue_limit, sizeof(uint64_t));
+#else
+  s_res.setsockopt(ZMQ_SNDHWM, &message_queue_limit, sizeof(uint64_t));
+  s_res.setsockopt(ZMQ_RCVHWM, &message_queue_limit, sizeof(uint64_t));
+#endif
+  
 
   s_req.bind(req_endpoint);
   s_res.bind(res_endpoint);

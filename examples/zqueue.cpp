@@ -39,7 +39,13 @@ worker(void*)
   try
   {
     zmq::socket_t s(ctx, ZMQ_REP);
+#ifdef ZMQ_HWM
     s.setsockopt(ZMQ_HWM, &one_message_queue, sizeof(uint64_t));
+#else
+    s.setsockopt(ZMQ_SNDHWM, &one_message_queue, sizeof(uint64_t));
+    s.setsockopt(ZMQ_RCVHWM, &one_message_queue, sizeof(uint64_t));
+#endif
+    
 
     s.connect(endpoint);
     // socket to receive data from main thread and to send result back
@@ -114,7 +120,12 @@ main(int, char**)
   pthread_t worker_tid;
 
   zmq::socket_t s(ctx, ZMQ_XREQ);
+#ifdef ZMQ_HWM
   s.setsockopt(ZMQ_HWM, &one_message_queue, sizeof(uint64_t));
+#else
+  s.setsockopt(ZMQ_SNDHWM, &one_message_queue, sizeof(uint64_t));
+  s.setsockopt(ZMQ_RCVHWM, &one_message_queue, sizeof(uint64_t));
+#endif
   s.bind(endpoint);
   // socket to talk to worker is bound
 

@@ -279,6 +279,18 @@ namespace ZmqMessage
       ptr->move(&(part.msg()));
       return ptr;
     }
+
+#ifdef ZMQMESSAGE_CPP11
+    inline
+    std::unique_ptr<zmq::message_t>
+    release_uptr(size_t i)
+    {
+      Part part = release(i);
+      std::unique_ptr<zmq::message_t> ptr(new zmq::message_t());
+      ptr->move(&(part.msg()));
+      return std::move(ptr);
+    }
+#endif
   };
 }
 

@@ -83,7 +83,7 @@ namespace ZmqMessage
   {
     std::stringstream ss;
     ss.write(static_cast<char*>(message.data()), message.size());
-    T t;
+    T t = T();
     ss >> t;
     return t;
   }
@@ -138,6 +138,7 @@ namespace ZmqMessage
     typename Private::DisableIf<Private::IsStr<T>::value>::type* = 0,
     typename Private::DisableIf<Private::IsRaw<T>::value>::type* = 0)
   {
+    t = T();
     std::stringstream ss;
     ss.write(static_cast<char*>(message.data()), message.size());
     ss >> t;

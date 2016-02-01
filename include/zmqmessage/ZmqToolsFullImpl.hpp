@@ -15,15 +15,6 @@
 
 #include <string>
 
-namespace
-{
-  void
-  zmqmessage_free(void *data, void *hint)
-  {
-    ::free(data);
-  }
-}
-
 namespace ZmqMessage
 {
   time_t
@@ -45,13 +36,8 @@ namespace ZmqMessage
   {
     try
     {
-      void *data = ::malloc(sz);
-      if (!data)
-      {
-        throw zmq::error_t();
-      }
-      ::memcpy(data, t, sz);
-      msg.rebuild(data, sz, &zmqmessage_free, 0);
+      msg.rebuild(sz);
+      ::memcpy(msg.data(), t, sz);
     }
     catch (const zmq::error_t& e)
     {

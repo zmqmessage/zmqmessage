@@ -380,6 +380,25 @@ namespace ZmqMessage
       return *this;
     }
 
+#ifdef ZMQMESSAGE_CPP11
+    /**
+     * Either, we take ownership on message.
+     * Not checking if this message is part of incoming_.
+     * If ptr contains 0, null message is sent
+     */
+    inline Sink&
+    operator<< (std::unique_ptr<zmq::message_t>&& msg) throw (ZmqErrorType)
+    {
+      Part part;
+      if (msg.get())
+      {
+        part.move(*msg);
+      }
+      send_owned(part);
+      return *this;
+    }
+#endif
+
     /**
      * Insert raw message (see @c RawMessage)
      */

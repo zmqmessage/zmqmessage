@@ -215,6 +215,12 @@ namespace ZmqMessage
   }
 #endif
 
+/**
+ * Support of C++11 features
+ */
+#ifdef __GXX_EXPERIMENTAL_CXX0X__
+#define ZMQMESSAGE_CPP11
+#endif
 }
 
 #endif /* ZMQMESSAGE_CONFIG_HPP_ */
